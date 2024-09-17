@@ -8,12 +8,13 @@
 
 /* Begin PBXBuildFile section */
 		4AE1EF622C9A19F600BA2C84 /* Flash_StoryApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AE1EF612C9A19F600BA2C84 /* Flash_StoryApp.swift */; };
-		4AE1EF642C9A19F600BA2C84 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AE1EF632C9A19F600BA2C84 /* ContentView.swift */; };
 		4AE1EF662C9A19FA00BA2C84 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4AE1EF652C9A19FA00BA2C84 /* Assets.xcassets */; };
 		4AE1EF692C9A19FA00BA2C84 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4AE1EF682C9A19FA00BA2C84 /* Preview Assets.xcassets */; };
 		4AE1EF732C9A19FA00BA2C84 /* Flash_StoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AE1EF722C9A19FA00BA2C84 /* Flash_StoryTests.swift */; };
 		4AE1EF7D2C9A19FB00BA2C84 /* Flash_StoryUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AE1EF7C2C9A19FB00BA2C84 /* Flash_StoryUITests.swift */; };
 		4AE1EF7F2C9A19FB00BA2C84 /* Flash_StoryUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AE1EF7E2C9A19FB00BA2C84 /* Flash_StoryUITestsLaunchTests.swift */; };
+		4AE1EF942C9A1EA600BA2C84 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AE1EF932C9A1EA600BA2C84 /* HomeView.swift */; };
+		4AE1EF962C9A29FC00BA2C84 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AE1EF952C9A29FC00BA2C84 /* ContentView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -36,7 +37,6 @@
 /* Begin PBXFileReference section */
 		4AE1EF5E2C9A19F600BA2C84 /* Flash Story.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Flash Story.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		4AE1EF612C9A19F600BA2C84 /* Flash_StoryApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Flash_StoryApp.swift; sourceTree = "<group>"; };
-		4AE1EF632C9A19F600BA2C84 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		4AE1EF652C9A19FA00BA2C84 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		4AE1EF682C9A19FA00BA2C84 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		4AE1EF6E2C9A19FA00BA2C84 /* Flash StoryTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Flash StoryTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -44,6 +44,8 @@
 		4AE1EF782C9A19FB00BA2C84 /* Flash StoryUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Flash StoryUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		4AE1EF7C2C9A19FB00BA2C84 /* Flash_StoryUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Flash_StoryUITests.swift; sourceTree = "<group>"; };
 		4AE1EF7E2C9A19FB00BA2C84 /* Flash_StoryUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Flash_StoryUITestsLaunchTests.swift; sourceTree = "<group>"; };
+		4AE1EF932C9A1EA600BA2C84 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
+		4AE1EF952C9A29FC00BA2C84 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -94,9 +96,13 @@
 		4AE1EF602C9A19F600BA2C84 /* Flash Story */ = {
 			isa = PBXGroup;
 			children = (
-				4AE1EF612C9A19F600BA2C84 /* Flash_StoryApp.swift */,
-				4AE1EF632C9A19F600BA2C84 /* ContentView.swift */,
-				4AE1EF652C9A19FA00BA2C84 /* Assets.xcassets */,
+				4AE1EF912C9A1CA800BA2C84 /* Resources */,
+				4AE1EF902C9A1C9D00BA2C84 /* Utilities */,
+				4AE1EF8F2C9A1C9300BA2C84 /* Services */,
+				4AE1EF8E2C9A1C8900BA2C84 /* ViewModels */,
+				4AE1EF8D2C9A1C7F00BA2C84 /* Models */,
+				4AE1EF8C2C9A1C7200BA2C84 /* Views */,
+				4AE1EF8B2C9A1C5700BA2C84 /* App */,
 				4AE1EF672C9A19FA00BA2C84 /* Preview Content */,
 			);
 			path = "Flash Story";
@@ -125,6 +131,67 @@
 				4AE1EF7E2C9A19FB00BA2C84 /* Flash_StoryUITestsLaunchTests.swift */,
 			);
 			path = "Flash StoryUITests";
+			sourceTree = "<group>";
+		};
+		4AE1EF8B2C9A1C5700BA2C84 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				4AE1EF612C9A19F600BA2C84 /* Flash_StoryApp.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		4AE1EF8C2C9A1C7200BA2C84 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				4AE1EF922C9A1D4600BA2C84 /* Home */,
+				4AE1EF952C9A29FC00BA2C84 /* ContentView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		4AE1EF8D2C9A1C7F00BA2C84 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		4AE1EF8E2C9A1C8900BA2C84 /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		4AE1EF8F2C9A1C9300BA2C84 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		4AE1EF902C9A1C9D00BA2C84 /* Utilities */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Utilities;
+			sourceTree = "<group>";
+		};
+		4AE1EF912C9A1CA800BA2C84 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				4AE1EF652C9A19FA00BA2C84 /* Assets.xcassets */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		4AE1EF922C9A1D4600BA2C84 /* Home */ = {
+			isa = PBXGroup;
+			children = (
+				4AE1EF932C9A1EA600BA2C84 /* HomeView.swift */,
+			);
+			path = Home;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -257,8 +324,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4AE1EF642C9A19F600BA2C84 /* ContentView.swift in Sources */,
+				4AE1EF942C9A1EA600BA2C84 /* HomeView.swift in Sources */,
 				4AE1EF622C9A19F600BA2C84 /* Flash_StoryApp.swift in Sources */,
+				4AE1EF962C9A29FC00BA2C84 /* ContentView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
