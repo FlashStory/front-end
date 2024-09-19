@@ -97,7 +97,7 @@ struct PostCard: View {
     
     var body: some View {
         VStack(alignment: .center, spacing: 0) {
-//            Text(post.category.uppercased())
+//            Text(post.collection.uppercased())
 //                .font(.caption)
 //                .foregroundColor(.secondary)
 //                .padding()
@@ -215,7 +215,7 @@ enum Reaction: String, CaseIterable {
 struct Post: Identifiable {
     let id = UUID()
     let content: [String]
-    let category: String
+    let collection: String
     var reactions: [Reaction: Int]
 }
 
@@ -227,7 +227,7 @@ let samplePosts = [
             "But it only takes 225 Earth days to complete one orbit of the Sun.",
             "This means that on Venus, a day is longer than a year!"
         ],
-        category: "Space Oddities",
+        collection: "Space Oddities",
         reactions: [.like: 120, .mindBlowing: 45, .alreadyKnew: 89, .hardToBelieve: 12, .interesting: 3]
     ),
     Post(
@@ -236,7 +236,7 @@ let samplePosts = [
             "Antarctica is considered a desert because it receives very little precipitation.",
             "Despite being covered in ice, Antarctica's air is extremely dry, qualifying it as the world's largest desert."
         ],
-        category: "Nature's Jaw-Droppers",
+        collection: "Nature's Jaw-Droppers",
         reactions: [.like: 95, .mindBlowing: 30, .alreadyKnew: 72, .hardToBelieve: 5, .interesting: 2]
     ),
     Post(
@@ -245,7 +245,7 @@ let samplePosts = [
             "In 1947, operators of the Mark II computer at Harvard University found a moth trapped in a relay and taped it in their logbook.",
             "This incident popularized the term 'bug' in computer science, though the term existed before in other contexts."
         ],
-        category: "Tech Time Bombs",
+        collection: "Tech Time Bombs",
         reactions: [.like: 110, .mindBlowing: 25, .alreadyKnew: 45, .hardToBelieve: 80, .interesting: 0]
     )
 ]

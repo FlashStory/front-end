@@ -11,10 +11,10 @@ struct LibraryView: View {
     let columns = [GridItem(.flexible()), GridItem(.flexible())]
     
     @State private var collections: [Collection] = [
-        Collection(name: "Science Facts", posts: Array(repeating: Post(content: ["Sample content"], category: "Science", reactions: [:]), count: 5)),
-        Collection(name: "Historical Eventsss", posts: Array(repeating: Post(content: ["Sample content"], category: "History", reactions: [:]), count: 8)),
-        Collection(name: "Tech Innovations", posts: Array(repeating: Post(content: ["Sample content"], category: "Technology", reactions: [:]), count: 3)),
-        Collection(name: "Nature Wonders", posts: Array(repeating: Post(content: ["Sample content"], category: "Nature", reactions: [:]), count: 6))
+        Collection(name: "Science Facts", posts: Array(repeating: Post(content: ["Sample content"], collection: "Science", reactions: [:]), count: 5)),
+        Collection(name: "Historical Eventsss", posts: Array(repeating: Post(content: ["Sample content"], collection: "History", reactions: [:]), count: 8)),
+        Collection(name: "Tech Innovations", posts: Array(repeating: Post(content: ["Sample content"], collection: "Technology", reactions: [:]), count: 3)),
+        Collection(name: "Nature Wonders", posts: Array(repeating: Post(content: ["Sample content"], collection: "Nature", reactions: [:]), count: 6))
     ]
 
     var body: some View {
@@ -63,7 +63,7 @@ struct CollectionDetailView: View {
             VStack(alignment: .leading, spacing: 5) {
                 Text(post.content[0])
                     .font(.body)
-                Text(post.category)
+                Text(post.collection)
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
