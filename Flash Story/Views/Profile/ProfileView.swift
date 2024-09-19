@@ -7,12 +7,6 @@
 
 import SwiftUI
 
-struct Collection: Identifiable {
-    let id = UUID()
-    let name: String
-    let posts: [Post]
-}
-
 struct ProfileView: View {
     @StateObject private var viewModel = ProfileViewModel()
     @Environment(\.horizontalSizeClass) private var sizeClass

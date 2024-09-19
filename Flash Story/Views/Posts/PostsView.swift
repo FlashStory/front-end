@@ -198,27 +198,6 @@ struct SaveButton: View {
     }
 }
 
-enum Reaction: String, CaseIterable {
-    case like, mindBlowing, alreadyKnew, hardToBelieve, interesting
-    
-    var emoji: String {
-        switch self {
-        case .like: return "👍"
-        case .mindBlowing: return "🤯"
-        case .alreadyKnew: return "🤓"
-        case .hardToBelieve: return "🤨"
-        case .interesting: return "🤔"
-        }
-    }
-}
-
-struct Post: Identifiable {
-    let id = UUID()
-    let content: [String]
-    let collection: String
-    var reactions: [Reaction: Int]
-}
-
 // Sample data
 let samplePosts = [
     Post(
