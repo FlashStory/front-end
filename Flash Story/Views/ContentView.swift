@@ -11,7 +11,7 @@ struct ContentView: View {
                         .tag(0)
                     PostsView()
                         .tag(1)
-                    PostsView()
+                    LibraryView()
                         .tag(2)
                     ProfileView()
                         .tag(3)
