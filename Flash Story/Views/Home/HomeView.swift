@@ -18,7 +18,6 @@ struct HomeView: View {
     let favoriteTopics = ["Ocean Life", "Sci-Fi Stories", "Ancient Civilizations", "Technology Breakthroughs"]
     
     var body: some View {
-        NavigationView {
             ScrollView {
                 VStack(spacing: 20) {
                     SearchBar(text: $searchText)
@@ -42,7 +41,6 @@ struct HomeView: View {
                 AllTopicsView(topics: otherTopics + bigTopics.keys.sorted())
             }
         }
-    }
 }
 
 struct SearchBar: View {
