@@ -13,6 +13,9 @@
 		4AA075ED2C9C876400974959 /* Collection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AA075EC2C9C876400974959 /* Collection.swift */; };
 		4AA075EF2C9C878700974959 /* Post.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AA075EE2C9C878700974959 /* Post.swift */; };
 		4AA075F12C9C879C00974959 /* Reaction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AA075F02C9C879C00974959 /* Reaction.swift */; };
+		4AA075F52C9C93E800974959 /* PostService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AA075F42C9C93E800974959 /* PostService.swift */; };
+		4AA075F72C9C99C600974959 /* dummyData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AA075F62C9C99C600974959 /* dummyData.swift */; };
+		4AA075F92C9C9D8800974959 /* CollectionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AA075F82C9C9D8800974959 /* CollectionService.swift */; };
 		4AE1EF622C9A19F600BA2C84 /* Flash_StoryApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AE1EF612C9A19F600BA2C84 /* Flash_StoryApp.swift */; };
 		4AE1EF662C9A19FA00BA2C84 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4AE1EF652C9A19FA00BA2C84 /* Assets.xcassets */; };
 		4AE1EF692C9A19FA00BA2C84 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4AE1EF682C9A19FA00BA2C84 /* Preview Assets.xcassets */; };
@@ -47,6 +50,9 @@
 		4AA075EC2C9C876400974959 /* Collection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Collection.swift; sourceTree = "<group>"; };
 		4AA075EE2C9C878700974959 /* Post.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Post.swift; sourceTree = "<group>"; };
 		4AA075F02C9C879C00974959 /* Reaction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Reaction.swift; sourceTree = "<group>"; };
+		4AA075F42C9C93E800974959 /* PostService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostService.swift; sourceTree = "<group>"; };
+		4AA075F62C9C99C600974959 /* dummyData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = dummyData.swift; path = "Flash Story/Resources/dummyData.swift"; sourceTree = SOURCE_ROOT; };
+		4AA075F82C9C9D8800974959 /* CollectionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CollectionService.swift; sourceTree = "<group>"; };
 		4AE1EF5E2C9A19F600BA2C84 /* Flash Story.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Flash Story.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		4AE1EF612C9A19F600BA2C84 /* Flash_StoryApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Flash_StoryApp.swift; sourceTree = "<group>"; };
 		4AE1EF652C9A19FA00BA2C84 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -209,6 +215,8 @@
 		4AE1EF8F2C9A1C9300BA2C84 /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				4AA075F42C9C93E800974959 /* PostService.swift */,
+				4AA075F82C9C9D8800974959 /* CollectionService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -216,6 +224,7 @@
 		4AE1EF902C9A1C9D00BA2C84 /* Utilities */ = {
 			isa = PBXGroup;
 			children = (
+				4AA075F62C9C99C600974959 /* dummyData.swift */,
 			);
 			path = Utilities;
 			sourceTree = "<group>";
@@ -367,10 +376,13 @@
 			buildActionMask = 2147483647;
 			files = (
 				4AE1EF942C9A1EA600BA2C84 /* HomeView.swift in Sources */,
+				4AA075F72C9C99C600974959 /* dummyData.swift in Sources */,
 				4AA075F12C9C879C00974959 /* Reaction.swift in Sources */,
+				4AA075F92C9C9D8800974959 /* CollectionService.swift in Sources */,
 				4AE1EF622C9A19F600BA2C84 /* Flash_StoryApp.swift in Sources */,
 				4A6B710D2C9B9514007482AE /* ProfileView.swift in Sources */,
 				4AA075EF2C9C878700974959 /* Post.swift in Sources */,
+				4AA075F52C9C93E800974959 /* PostService.swift in Sources */,
 				4A6B710A2C9B94AB007482AE /* PostsView.swift in Sources */,
 				4A6B71122C9BA71D007482AE /* LibraryView.swift in Sources */,
 				4AA075ED2C9C876400974959 /* Collection.swift in Sources */,

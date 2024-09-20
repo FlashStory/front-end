@@ -21,7 +21,7 @@ struct ProfileView: View {
             }
             .padding()
         }
-        .navigationTitle("Profile")
+//        .navigationTitle("Profile")
         .navigationBarTitleDisplayMode(.large)
         .background(backgroundColor)
     }

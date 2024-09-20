@@ -7,25 +7,99 @@
 
 import SwiftUI
 
+
+// MARK: - View Models
+class PostsViewModel: ObservableObject {
+    @Published var posts: [Post] = []
+    @Published var isLoading = false
+    @Published var collectionName: String = ""
+    private let postService = PostService()
+    
+    func fetchPosts(for collectionId: String) {
+        isLoading = true
+        Task {
+            do {
+                let fetchedPosts = try await postService.getPostsByCollection(collectionId: collectionId)
+                DispatchQueue.main.async {
+                    self.posts = fetchedPosts
+                    self.collectionName = fetchedPosts.first?.collectionName ?? ""
+                    self.isLoading = false
+                }
+            } catch {
+                print("Error fetching posts: \(error)")
+                DispatchQueue.main.async {
+                    self.isLoading = false
+                    // Handle error (e.g., show an alert)
+                }
+            }
+        }
+    }
+}
+
+
+// MARK: - Main Models
 struct PostsView: View {
-    @State private var posts = samplePosts
+    @StateObject private var viewModel = PostsViewModel()
     @State private var currentIndex = 0
+    @Environment(\.presentationMode) var presentationMode
+    let collectionId: String
 
     var body: some View {
         GeometryReader { geometry in
-            VerticalPagingView(
-                currentIndex: $currentIndex,
-                items: posts,
-                itemContent: { post in
-                    PostCardContainer(post: post)
+            ZStack(alignment: .top) {
+                if viewModel.isLoading {
+                    ProgressView()
                         .frame(width: geometry.size.width, height: geometry.size.height)
+                } else {
+                    VerticalPagingView(
+                        currentIndex: $currentIndex,
+                        items: viewModel.posts,
+                        itemContent: { post in
+                            PostCardContainer(post: post)
+                                .frame(width: geometry.size.width, height: geometry.size.height)
+                        }
+                    )
                 }
-            )
+                
+                VStack {
+                    HStack {
+                        backButton
+                        Spacer()
+                        collectionNameLabel
+                        Spacer()
+                    }
+                    .padding(.horizontal)
+                    .padding(.top)
+                    
+                    Spacer()
+                }
+            }
         }
-        .edgesIgnoringSafeArea(.all)
         .statusBar(hidden: true)
+        .onAppear {
+            viewModel.fetchPosts(for: collectionId)
+        }
+        .navigationBarBackButtonHidden()
+    }
+    
+    private var backButton: some View {
+        Button(action: {
+            presentationMode.wrappedValue.dismiss()
+        }) {
+            Image(systemName: "chevron.left")
+                .foregroundColor(.primary)
+                .font(.title3)
+        }
+    }
+    
+    private var collectionNameLabel: some View {
+        Text(viewModel.collectionName)
+            .font(.title3)
+            .fontWeight(.semibold)
+            .foregroundColor(.primary)
     }
 }
+
 
 struct VerticalPagingView<Item: Identifiable, Content: View>: View {
     @Binding var currentIndex: Int
@@ -83,7 +157,7 @@ struct PostCardContainer: View {
                     
                     SaveButton(isSaved: $savedState)
                 }
-                .padding(.horizontal)
+                .padding(.horizontal, geometry.size.width * 0.05)
                 .frame(width: geometry.size.width * 0.9)
             }
             .frame(width: geometry.size.width, height: geometry.size.height)
@@ -91,17 +165,49 @@ struct PostCardContainer: View {
     }
 }
 
+struct ReactionBar: View {
+    @State var reactions: Reactions
+    
+    var body: some View {
+        HStack(spacing: 15) {
+            ForEach(Reaction.allCases, id: \.self) { reaction in
+                ReactionButton(reaction: reaction, count: reactionCount(for: reaction)) {
+                    incrementReaction(reaction)
+                }
+            }
+        }
+    }
+    
+    private func reactionCount(for reaction: Reaction) -> Int {
+        switch reaction {
+        case .like: return reactions.like
+        case .mindBlowing: return reactions.mindBlowing
+        case .alreadyKnew: return reactions.alreadyKnew
+        case .hardToBelieve: return reactions.hardToBelieve
+        case .interesting: return reactions.interesting
+        }
+    }
+    
+    private func incrementReaction(_ reaction: Reaction) {
+        withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+            switch reaction {
+            case .like: reactions.like += 1
+            case .mindBlowing: reactions.mindBlowing += 1
+            case .alreadyKnew: reactions.alreadyKnew += 1
+            case .hardToBelieve: reactions.hardToBelieve += 1
+            case .interesting: reactions.interesting += 1
+            }
+        }
+    }
+}
+
+
 struct PostCard: View {
     let post: Post
     @State private var currentPage = 0
     
     var body: some View {
         VStack(alignment: .center, spacing: 0) {
-//            Text(post.collection.uppercased())
-//                .font(.caption)
-//                .foregroundColor(.secondary)
-//                .padding()
-//                .frame(maxWidth: .infinity, alignment: .leading)
             
             TabView(selection: $currentPage) {
                 ForEach(post.content.indices, id: \.self) { index in
@@ -134,22 +240,6 @@ struct PageControl: View {
                 Circle()
                     .fill(page == currentPage ? Color.gray : Color.gray.opacity(0.5))
                     .frame(width: 8, height: 8)
-            }
-        }
-    }
-}
-
-struct ReactionBar: View {
-    @State var reactions: [Reaction: Int]
-    
-    var body: some View {
-        HStack(spacing: 15) {
-            ForEach(Reaction.allCases, id: \.self) { reaction in
-                ReactionButton(reaction: reaction, count: reactions[reaction] ?? 0) {
-                    withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
-                        reactions[reaction, default: 0] += 1
-                    }
-                }
             }
         }
     }
@@ -199,35 +289,41 @@ struct SaveButton: View {
 }
 
 // Sample data
-let samplePosts = [
-    Post(
-        content: [
-            "A day on Venus is longer than its year. Venus rotates so slowly that it takes 243 Earth days to complete one rotation. A day on Venus is longer than its year. Venus rotates so slowly that it takes 243 Earth days to complete one rotation. A day on Venus is longer than its year. Venus rotates so slowly that it takes 243 Earth days to complete one rotation.",
-            "But it only takes 225 Earth days to complete one orbit of the Sun.",
-            "This means that on Venus, a day is longer than a year!"
-        ],
-        collection: "Space Oddities",
-        reactions: [.like: 120, .mindBlowing: 45, .alreadyKnew: 89, .hardToBelieve: 12, .interesting: 3]
-    ),
-    Post(
-        content: [
-            "The world's largest desert is Antarctica, not the Sahara.",
-            "Antarctica is considered a desert because it receives very little precipitation.",
-            "Despite being covered in ice, Antarctica's air is extremely dry, qualifying it as the world's largest desert."
-        ],
-        collection: "Nature's Jaw-Droppers",
-        reactions: [.like: 95, .mindBlowing: 30, .alreadyKnew: 72, .hardToBelieve: 5, .interesting: 2]
-    ),
-    Post(
-        content: [
-            "The first computer 'bug' was an actual insect.",
-            "In 1947, operators of the Mark II computer at Harvard University found a moth trapped in a relay and taped it in their logbook.",
-            "This incident popularized the term 'bug' in computer science, though the term existed before in other contexts."
-        ],
-        collection: "Tech Time Bombs",
-        reactions: [.like: 110, .mindBlowing: 25, .alreadyKnew: 45, .hardToBelieve: 80, .interesting: 0]
-    )
-]
+//let samplePosts = [
+//    Post(
+//        id: "as1312423",
+//        content: [
+//            "A day on Venus is longer than its year. Venus rotates so slowly that it takes 243 Earth days to complete one rotation. A day on Venus is longer than its year. Venus rotates so slowly that it takes 243 Earth days to complete one rotation. A day on Venus is longer than its year. Venus rotates so slowly that it takes 243 Earth days to complete one rotation.",
+//            "But it only takes 225 Earth days to complete one orbit of the Sun.",
+//            "This means that on Venus, a day is longer than a year!"
+//        ],
+//        collectionId: "66eb9d588eb2e6165940e898",
+//        collectionName: "Space Oddities",
+//        reactions: [.like: 120, .mindBlowing: 45, .alreadyKnew: 89, .hardToBelieve: 12, .interesting: 3]
+//    ),
+//    Post(
+//        id: "as123",
+//        content: [
+//            "The world's largest desert is Antarctica, not the Sahara.",
+//            "Antarctica is considered a desert because it receives very little precipitation.",
+//            "Despite being covered in ice, Antarctica's air is extremely dry, qualifying it as the world's largest desert."
+//        ],
+//        collectionId: "66eb9d588eb2e6165940e898",
+//        collectionName: "Nature's Jaw-Droppers",
+//        reactions: [.like: 95, .mindBlowing: 30, .alreadyKnew: 72, .hardToBelieve: 5, .interesting: 2]
+//    ),
+//    Post(
+//        id: "as112323",
+//        content: [
+//            "The first computer 'bug' was an actual insect.",
+//            "In 1947, operators of the Mark II computer at Harvard University found a moth trapped in a relay and taped it in their logbook.",
+//            "This incident popularized the term 'bug' in computer science, though the term existed before in other contexts."
+//        ],
+//        collectionId: "66eb9d588eb2e6165940e898",
+//        collectionName: "Tech Time Bombs",
+//        reactions: [.like: 110, .mindBlowing: 25, .alreadyKnew: 45, .hardToBelieve: 80, .interesting: 0]
+//    )
+//]
 
 //struct PostsView_Previews: PreviewProvider {
 //    static var previews: some View {
@@ -236,5 +332,5 @@ let samplePosts = [
 //}
 
 #Preview {
-    PostsView()
+    PostsView(collectionId: "66eb9d588eb2e6165940e8c0")
 }

@@ -2,28 +2,37 @@ import SwiftUI
 
 struct ContentView: View {
     @State private var selectedTab = 0
+    @State private var navigationPath = NavigationPath()
     
     var body: some View {
-        GeometryReader { geometry in
-            VStack(spacing: 0) {
-                TabView(selection: $selectedTab) {
-                    HomeView()
-                        .tag(0)
-                    PostsView()
-                        .tag(1)
-                    LibraryView()
-                        .tag(2)
-                    ProfileView()
-                        .tag(3)
+        NavigationStack(path: $navigationPath) {
+            GeometryReader { geometry in
+                ZStack(alignment: .bottom) {
+                    TabView(selection: $selectedTab) {
+                        HomeView(navigationPath: $navigationPath)
+                            .tag(0)
+                        
+                        PostsView(collectionId: "66eb9d588eb2e6165940e8c0")
+                            .tag(1)
+                        
+                        LibraryView()
+                            .tag(2)
+                        
+                        ProfileView()
+                            .tag(3)
+                    }
+                    .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
+                    
+                    CustomTabBar(selectedTab: $selectedTab)
+                        .opacity(navigationPath.isEmpty ? 1 : 0)
+                        .animation(.easeInOut, value: navigationPath.isEmpty)
                 }
-                .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
-                .frame(height: geometry.size.height - 50)
-                
-                CustomTabBar(selectedTab: $selectedTab)
-                    .frame(height: 50)
+            }
+            .edgesIgnoringSafeArea(.bottom)
+            .navigationDestination(for: String.self) { collectionId in
+                PostsView(collectionId: collectionId)
             }
         }
-        .edgesIgnoringSafeArea(.all)
     }
 }
 
@@ -32,21 +41,23 @@ struct CustomTabBar: View {
     @Environment(\.verticalSizeClass) var verticalSizeClass
     
     var body: some View {
-        HStack {
-            Spacer()
-            tabButton(title: "Home", icon: "house", selectedIcon: "house.fill", tag: 0)
-            Spacer()
-            tabButton(title: "Explore", icon: "safari", selectedIcon: "safari.fill", tag: 1)
-            Spacer()
-            tabButton(title: "Library", icon: "book", selectedIcon: "book.fill", tag: 2)
-            Spacer()
-            tabButton(title: "Profile", icon: "person", selectedIcon: "person.fill", tag: 3)
-            Spacer()
+        VStack(spacing: 0) {
+            Divider()
+            HStack {
+                Spacer()
+                tabButton(title: "Home", icon: "house", selectedIcon: "house.fill", tag: 0)
+                Spacer()
+                tabButton(title: "Explore", icon: "safari", selectedIcon: "safari.fill", tag: 1)
+                Spacer()
+                tabButton(title: "Library", icon: "book", selectedIcon: "book.fill", tag: 2)
+                Spacer()
+                tabButton(title: "Profile", icon: "person", selectedIcon: "person.fill", tag: 3)
+                Spacer()
+            }
+            .padding(.top, 10)
+            .padding(.bottom, verticalSizeClass == .compact ? 0 : 10)
+            .background(Color(.systemBackground))
         }
-        .padding(.top, 10)
-        .padding(.bottom, verticalSizeClass == .compact ? 0 : 10)
-        .background(Color(.systemBackground))
-        .overlay(Divider(), alignment: .top)
     }
     
     func tabButton(title: String, icon: String, selectedIcon: String, tag: Int) -> some View {

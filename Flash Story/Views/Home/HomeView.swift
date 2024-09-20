@@ -1,10 +1,13 @@
 import SwiftUI
 
-struct HomeView: View {
-    @State private var searchText = ""
-    @State private var showAllTopics = false
+// MARK: - View Models
+
+class HomeViewModel: ObservableObject {
+    @Published var collections: [CollectionView] = []
+    @Published var searchText = ""
+    @Published var showAllTopics = false
     
-    let bigTopics = [
+    let bigTopics: [String: [String]] = [
         "Nature": ["Ocean Life", "Space Exploration", "Rainforests", "Desert Ecosystems", "Mountain Ranges"],
         "Country Facts": ["United States", "Japan", "Brazil", "Egypt", "Australia", "India", "France"],
         "Historical Events": ["Ancient Civilizations", "World Wars", "Industrial Revolution", "Space Race", "Civil Rights Movements"]
@@ -17,30 +20,205 @@ struct HomeView: View {
     
     let favoriteTopics = ["Ocean Life", "Sci-Fi Stories", "Ancient Civilizations", "Technology Breakthroughs"]
     
+    private let collectionService = CollectionService()
+    
+    func fetchCollections() {
+        Task {
+            do {
+                let fetchedCollections = try await collectionService.getAllCollections()
+                DispatchQueue.main.async {
+                    self.collections = fetchedCollections
+                }
+            } catch {
+                print("Error fetching collections: \(error)")
+            }
+        }
+    }
+}
+
+// MARK: - Main View
+
+struct HomeView: View {
+    @StateObject private var viewModel = HomeViewModel()
+    @Binding var navigationPath: NavigationPath
+    
     var body: some View {
-            ScrollView {
+            ScrollView(showsIndicators: false) {
                 VStack(spacing: 20) {
-                    SearchBar(text: $searchText)
-                    
-                    HotTopicsView()
-                    
+                    SearchBar(text: $viewModel.searchText)
+                    HotTopicsView(collections: viewModel.collections.prefix(5), navigationPath: $navigationPath)
                     FactOfTheDayView()
+                    FavoritesView(collections: viewModel.collections.filter { viewModel.favoriteTopics.contains($0.name) }, navigationPath: $navigationPath)
                     
-                    FavoritesView(topics: favoriteTopics)
-                    
-                    ForEach(bigTopics.keys.sorted(), id: \.self) { topic in
-                        BigTopicView(title: topic, subtopics: bigTopics[topic] ?? [])
+                    ForEach(viewModel.bigTopics.keys.sorted(), id: \.self) { topic in
+                        BigTopicView(title: topic, collections: viewModel.collections.filter { viewModel.bigTopics[topic]?.contains($0.name) ?? false }, navigationPath: $navigationPath)
                     }
                     
-                    MoreTopicsView(topics: otherTopics, showAllAction: { showAllTopics = true })
+                    MoreTopicsView(collections: viewModel.collections.filter { viewModel.otherTopics.contains($0.name) }, showAllAction: { viewModel.showAllTopics = true }, navigationPath: $navigationPath)
                 }
                 .padding()
             }
-            .navigationTitle("Flash Story")
-            .sheet(isPresented: $showAllTopics) {
-                AllTopicsView(topics: otherTopics + bigTopics.keys.sorted())
+//            .navigationTitle("Flash Story")
+            .sheet(isPresented: $viewModel.showAllTopics) {
+                AllTopicsView(collections: viewModel.collections, navigationPath: $navigationPath)
+            }
+            .onAppear {
+                viewModel.fetchCollections()
             }
         }
+}
+
+// MARK: - Subviews
+
+struct HotTopicsView: View {
+    let collections: ArraySlice<CollectionView>
+    @Binding var navigationPath: NavigationPath
+    
+    var body: some View {
+        VStack(alignment: .leading) {
+            Text("Hot Topics").font(.headline)
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 15) {
+                    ForEach(Array(collections), id: \.id) { collection in
+                        NavigationLink(destination: PostsView(collectionId: collection.id)) {
+                            TopicCard(title: collection.name, avatarURL: collection.avatar)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+struct FavoritesView: View {
+    let collections: [CollectionView]
+    @Binding var navigationPath: NavigationPath
+    
+    var body: some View {
+        VStack(alignment: .leading) {
+            Text("Favorites").font(.headline)
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 15) {
+                    ForEach(collections, id: \.id) { collection in
+                        NavigationLink(destination: PostsView(collectionId: collection.id)) {
+                            TopicCard(title: collection.name, avatarURL: collection.avatar)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+struct BigTopicView: View {
+    let title: String
+    let collections: [CollectionView]
+    @Binding var navigationPath: NavigationPath
+    
+    var body: some View {
+        VStack(alignment: .leading) {
+            Text(title).font(.headline)
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 15) {
+                    ForEach(collections, id: \.id) { collection in
+                        NavigationLink(destination: PostsView(collectionId: collection.id)) {
+                            TopicCard(title: collection.name, avatarURL: collection.avatar)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+struct MoreTopicsView: View {
+    let collections: [CollectionView]
+    let showAllAction: () -> Void
+    @Binding var navigationPath: NavigationPath
+    
+    var body: some View {
+        VStack(alignment: .leading) {
+            HStack {
+                Text("More Topics").font(.headline)
+                Spacer()
+                Button("Show All", action: showAllAction)
+                    .foregroundColor(.blue)
+            }
+            
+            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 15) {
+                ForEach(collections.prefix(4), id: \.id) { collection in
+                    NavigationLink(destination: PostsView(collectionId: collection.id)) {
+                        TopicCard(title: collection.name, avatarURL: collection.avatar)
+                    }
+                }
+            }
+        }
+    }
+}
+
+struct AllTopicsView: View {
+    let collections: [CollectionView]
+    @Environment(\.presentationMode) var presentationMode
+    @Binding var navigationPath: NavigationPath
+    
+    var body: some View {
+        NavigationView {
+            List(collections, id: \.id) { collection in
+                NavigationLink(destination: PostsView(collectionId: collection.id)) {
+                    Text(collection.name)
+                }
+            }
+            .navigationTitle("All Topics")
+            .navigationBarItems(trailing: Button("Done") {
+                presentationMode.wrappedValue.dismiss()
+            })
+        }
+    }
+}
+
+struct TopicCard: View {
+    let title: String
+    let avatarURL: String
+    
+    var body: some View {
+        VStack {
+            AsyncImage(url: URL(string: avatarURL)) { phase in
+                switch phase {
+                case .empty:
+                    ProgressView()
+                case .success(let image):
+                    image.resizable().aspectRatio(contentMode: .fill)
+                case .failure:
+                    Image(systemName: "photo").foregroundColor(.gray)
+                @unknown default:
+                    EmptyView()
+                }
+            }
+            .frame(width: 120, height: 80)
+            .clipShape(RoundedRectangle(cornerRadius: 10))
+            .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.gray.opacity(0.2), lineWidth: 1))
+            
+            Text(title)
+                .font(.caption)
+                .multilineTextAlignment(.center)
+                .frame(width: 120, height: 40)
+                .lineLimit(2)
+                .foregroundStyle(Color.primary)
+        }
+        .frame(height: 120)
+    }
+}
+
+struct FactOfTheDayView: View {
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Fact of the Day").font(.headline)
+            Text("Did you know that honeybees can recognize human faces?")
+                .padding()
+                .background(Color.yellow.opacity(0.1))
+                .cornerRadius(10)
+        }
+    }
 }
 
 struct SearchBar: View {
@@ -57,144 +235,8 @@ struct SearchBar: View {
     }
 }
 
-struct HotTopicsView: View {
-    let hotTopics = ["Viral Space Photo", "Unexpected Animal Friendship", "Historical Mystery Solved", "Breakthrough in Renewable Energy", "Ancient Artifact Discovery"]
-    
-    var body: some View {
-        VStack(alignment: .leading) {
-            Text("Hot Topics")
-                .font(.headline)
-            
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 15) {
-                    ForEach(hotTopics, id: \.self) { topic in
-                        TopicCard(title: topic, color: .orange, icon: "flame.fill")
-                    }
-                }
-            }
-        }
-    }
-}
-
-struct FactOfTheDayView: View {
-    var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("Fact of the Day")
-                .font(.headline)
-            
-            Text("Did you know that honeybees can recognize human faces?")
-                .padding()
-                .background(Color.yellow.opacity(0.1))
-                .cornerRadius(10)
-        }
-    }
-}
-
-struct FavoritesView: View {
-    let topics: [String]
-    
-    var body: some View {
-        VStack(alignment: .leading) {
-            Text("Favorites")
-                .font(.headline)
-            
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 15) {
-                    ForEach(topics, id: \.self) { topic in
-                        TopicCard(title: topic, color: .red, icon: "heart.fill")
-                    }
-                }
-            }
-        }
-    }
-}
-
-struct BigTopicView: View {
-    let title: String
-    let subtopics: [String]
-    
-    var body: some View {
-        VStack(alignment: .leading) {
-            Text(title)
-                .font(.headline)
-            
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 15) {
-                    ForEach(subtopics, id: \.self) { subtopic in
-                        TopicCard(title: subtopic, color: .blue, icon: "book.fill")
-                    }
-                }
-            }
-        }
-    }
-}
-
-struct MoreTopicsView: View {
-    let topics: [String]
-    let showAllAction: () -> Void
-    
-    var body: some View {
-        VStack(alignment: .leading) {
-            HStack {
-                Text("More Topics")
-                    .font(.headline)
-                Spacer()
-                Button("Show All", action: showAllAction)
-                    .foregroundColor(.blue)
-            }
-            
-            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 15) {
-                ForEach(topics.prefix(4), id: \.self) { topic in
-                    TopicCard(title: topic, color: .purple, icon: "square.grid.2x2.fill")
-                }
-            }
-        }
-    }
-}
-
-struct TopicCard: View {
-    let title: String
-    let color: Color
-    let icon: String
-    
-    var body: some View {
-        VStack {
-            RoundedRectangle(cornerRadius: 10)
-                .fill(color.opacity(0.1))
-                .frame(width: 120, height: 80)
-                .overlay(
-                    Image(systemName: icon)
-                        .foregroundColor(color)
-                )
-            Text(title)
-                .font(.caption)
-                .multilineTextAlignment(.center)
-                .frame(width: 120, height: 40)
-                .lineLimit(2)
-        }
-        .frame(height: 120)
-    }
-}
-
-struct AllTopicsView: View {
-    let topics: [String]
-    @Environment(\.presentationMode) var presentationMode
-    
-    var body: some View {
-        NavigationView {
-            List(topics, id: \.self) { topic in
-                Text(topic)
-            }
-            .navigationTitle("All Topics")
-            .navigationBarItems(trailing: Button("Done") {
-                presentationMode.wrappedValue.dismiss()
-            })
-        }
-    }
-}
-
-struct HomeView_Previews: PreviewProvider {
-    static var previews: some View {
-        HomeView()
-    }
-}
+//#Preview {
+//    NavigationView {
+//        HomeView()
+//    }
+//}
