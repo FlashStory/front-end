@@ -7,6 +7,18 @@
 
 import Foundation
 
+struct Reactions: Codable {
+    var like: Int
+    var mindBlowing: Int
+    var alreadyKnew: Int
+    var hardToBelieve: Int
+    var interesting: Int
+    
+    enum CodingKeys: String, CodingKey {
+        case like, mindBlowing, alreadyKnew, hardToBelieve, interesting
+    }
+}
+
 enum Reaction: String, CaseIterable {
     case like, mindBlowing, alreadyKnew, hardToBelieve, interesting
     

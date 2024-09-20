@@ -7,9 +7,15 @@
 
 import Foundation
 
-struct Post: Identifiable {
-    let id = UUID()
+struct Post: Identifiable, Codable {
+    let id: String
     let content: [String]
-    let collection: String
-    var reactions: [Reaction: Int]
+    let collectionId: String
+    let collectionName: String
+    var reactions: Reactions
+    
+    enum CodingKeys: String, CodingKey {
+        case id = "_id"
+        case content, collectionId, collectionName, reactions
+    }
 }
