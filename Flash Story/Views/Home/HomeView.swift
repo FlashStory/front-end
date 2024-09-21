@@ -190,7 +190,13 @@ struct AllTopicsView: View {
             VStack {
                 List {
                     ForEach(filteredCollections, id: \.id) { collection in
-                        NavigationLink(destination: PostsView(collectionId: collection.id)) {
+                        Button(action: {
+                            presentationMode.wrappedValue.dismiss()
+                            
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                                navigationPath.append(collection.id)
+                            }
+                        }) {
                             HStack {
                                 AsyncImage(url: URL(string: collection.avatar)) { phase in
                                     switch phase {
