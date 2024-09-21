@@ -76,7 +76,9 @@ struct HotTopicsView: View {
     
     var body: some View {
         VStack(alignment: .leading) {
-            Text("Hot Topics").font(.headline)
+            Text("Hot Topics")
+                .font(.title2)
+                .fontWeight(.semibold)
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 15) {
                     ForEach(Array(collections), id: \.id) { collection in
@@ -96,7 +98,9 @@ struct FavoritesView: View {
     
     var body: some View {
         VStack(alignment: .leading) {
-            Text("Favorites").font(.headline)
+            Text("Favorites")
+                .font(.title2)
+                .fontWeight(.semibold)
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 15) {
                     ForEach(collections, id: \.id) { collection in
@@ -117,7 +121,9 @@ struct BigTopicView: View {
     
     var body: some View {
         VStack(alignment: .leading) {
-            Text(title).font(.headline)
+            Text(title)
+                .font(.title2)
+                .fontWeight(.semibold)
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 15) {
                     ForEach(collections, id: \.id) { collection in
@@ -137,12 +143,21 @@ struct MoreTopicsView: View {
     @Binding var navigationPath: NavigationPath
     
     var body: some View {
-        VStack(alignment: .leading) {
+        VStack(alignment: .leading, spacing: 16) {
             HStack {
-                Text("More Topics").font(.headline)
+                Text("More Topics")
+                    .font(.title2)
+                    .fontWeight(.semibold)
                 Spacer()
-                Button("Show All", action: showAllAction)
-                    .foregroundColor(.blue)
+                Button(action: showAllAction) {
+                    Text("Show All")
+                        .font(.subheadline)
+                        .foregroundColor(.primary)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(Color.secondary.opacity(0.1))
+                        .cornerRadius(20)
+                }
             }
             
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 15) {
@@ -160,16 +175,51 @@ struct AllTopicsView: View {
     let collections: [CollectionView]
     @Environment(\.presentationMode) var presentationMode
     @Binding var navigationPath: NavigationPath
+    @State private var searchText = ""
+    
+    var filteredCollections: [CollectionView] {
+        if searchText.isEmpty {
+            return collections
+        } else {
+            return collections.filter { $0.name.localizedCaseInsensitiveContains(searchText) }
+        }
+    }
     
     var body: some View {
-        NavigationView {
-            List(collections, id: \.id) { collection in
-                NavigationLink(destination: PostsView(collectionId: collection.id)) {
-                    Text(collection.name)
+        NavigationStack {
+            VStack {
+                List {
+                    ForEach(filteredCollections, id: \.id) { collection in
+                        NavigationLink(destination: PostsView(collectionId: collection.id)) {
+                            HStack {
+                                AsyncImage(url: URL(string: collection.avatar)) { phase in
+                                    switch phase {
+                                    case .empty:
+                                        ProgressView()
+                                    case .success(let image):
+                                        image.resizable().aspectRatio(contentMode: .fill)
+                                    case .failure:
+                                        Image(systemName: "photo")
+                                            .foregroundColor(.gray)
+                                    @unknown default:
+                                        EmptyView()
+                                    }
+                                }
+                                .frame(width: 50, height: 50)
+                                .clipShape(RoundedRectangle(cornerRadius: 10))
+                                
+                                Text(collection.name)
+                                    .font(.body)
+                                    .padding(.leading, 8)
+                            }
+                            .padding(.vertical, 4)
+                        }
+                    }
                 }
+                .listStyle(PlainListStyle())
             }
-            .navigationTitle("All Topics")
-            .navigationBarItems(trailing: Button("Done") {
+//            .navigationTitle("All Topics")
+            .navigationBarItems(trailing: Button("Close") {
                 presentationMode.wrappedValue.dismiss()
             })
         }
