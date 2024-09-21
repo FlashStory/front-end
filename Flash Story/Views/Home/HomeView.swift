@@ -206,6 +206,7 @@ struct TopicCard: View {
                 .foregroundStyle(Color.primary)
         }
         .frame(height: 120)
+        .padding(.top, 6)
     }
 }
 
@@ -235,8 +236,8 @@ struct SearchBar: View {
     }
 }
 
-//#Preview {
-//    NavigationView {
-//        HomeView()
-//    }
-//}
+#Preview {
+    NavigationStack {
+        HomeView(navigationPath: .constant(NavigationPath()))
+    }
+}

@@ -79,6 +79,90 @@ let dummyCollections: [Collection] = [
             collectionName: "Futuristic Technologies",
             reactions: Reactions(like: 18, mindBlowing: 9, alreadyKnew: 2, hardToBelieve: 4, interesting: 6)
         ), count: 2)
+    ),
+    Collection(
+        id: "asd112dsa",
+        name: "Futuristic Technologies",
+        avatar: "https://www.pexels.com/photo/grayscale-photo-of-people-between-buildings-1217258/",
+        posts: Array(repeating: Post(
+            id: UUID().uuidString,
+            content: ["Sample future tech content"],
+            collectionId: "asd12dsa",
+            collectionName: "Futuristic Technologies",
+            reactions: Reactions(like: 18, mindBlowing: 9, alreadyKnew: 2, hardToBelieve: 4, interesting: 6)
+        ), count: 2)
+    ),
+    Collection(
+        id: "asd1a2dsa",
+        name: "Futuristic Technologies",
+        avatar: "https://www.pexels.com/photo/grayscale-photo-of-people-between-buildings-1217258/",
+        posts: Array(repeating: Post(
+            id: UUID().uuidString,
+            content: ["Sample future tech content"],
+            collectionId: "asd12dsa",
+            collectionName: "Futuristic Technologies",
+            reactions: Reactions(like: 18, mindBlowing: 9, alreadyKnew: 2, hardToBelieve: 4, interesting: 6)
+        ), count: 2)
+    ),
+    Collection(
+        id: "asd122dsa",
+        name: "Futuristic Technologies",
+        avatar: "https://www.pexels.com/photo/grayscale-photo-of-people-between-buildings-1217258/",
+        posts: Array(repeating: Post(
+            id: UUID().uuidString,
+            content: ["Sample future tech content"],
+            collectionId: "asd12dsa",
+            collectionName: "Futuristic Technologies",
+            reactions: Reactions(like: 18, mindBlowing: 9, alreadyKnew: 2, hardToBelieve: 4, interesting: 6)
+        ), count: 2)
+    ),
+    Collection(
+        id: "asd1132dsa",
+        name: "Futuristic Technologies",
+        avatar: "https://www.pexels.com/photo/grayscale-photo-of-people-between-buildings-1217258/",
+        posts: Array(repeating: Post(
+            id: UUID().uuidString,
+            content: ["Sample future tech content"],
+            collectionId: "asd12dsa",
+            collectionName: "Futuristic Technologies",
+            reactions: Reactions(like: 18, mindBlowing: 9, alreadyKnew: 2, hardToBelieve: 4, interesting: 6)
+        ), count: 2)
+    ),
+    Collection(
+        id: "asd12213dsa",
+        name: "Futuristic Technologies",
+        avatar: "https://www.pexels.com/photo/grayscale-photo-of-people-between-buildings-1217258/",
+        posts: Array(repeating: Post(
+            id: UUID().uuidString,
+            content: ["Sample future tech content"],
+            collectionId: "asd12dsa",
+            collectionName: "Futuristic Technologies",
+            reactions: Reactions(like: 18, mindBlowing: 9, alreadyKnew: 2, hardToBelieve: 4, interesting: 6)
+        ), count: 2)
+    ),
+    Collection(
+        id: "asd12d4sa",
+        name: "Futuriasstic Technologies",
+        avatar: "https://www.pexels.com/photo/grayscale-photo-of-people-between-buildings-1217258/",
+        posts: Array(repeating: Post(
+            id: UUID().uuidString,
+            content: ["Sample future tech content"],
+            collectionId: "asd12dsa",
+            collectionName: "Futuristic Technologies",
+            reactions: Reactions(like: 18, mindBlowing: 9, alreadyKnew: 2, hardToBelieve: 4, interesting: 6)
+        ), count: 2)
+    ),
+    Collection(
+        id: "asd1251dsa",
+        name: "Futuristic Technologies",
+        avatar: "https://www.pexels.com/photo/grayscale-photo-of-people-between-buildings-1217258/",
+        posts: Array(repeating: Post(
+            id: UUID().uuidString,
+            content: ["Sample future tech content"],
+            collectionId: "asd12dsa",
+            collectionName: "Futuristic Technologies",
+            reactions: Reactions(like: 18, mindBlowing: 9, alreadyKnew: 2, hardToBelieve: 4, interesting: 6)
+        ), count: 2)
     )
 ]
 
