@@ -13,9 +13,16 @@ class PostsViewModel: ObservableObject {
     @Published var posts: [Post] = []
     @Published var isLoading = false
     @Published var collectionName: String = ""
+    @Published var currentIndex = 0
     private let postService = PostService()
+    private let positionTracker = CollectionPositionTracker()
+    let collectionId: String
     
-    func fetchPosts(for collectionId: String) {
+    init(collectionId: String) {
+        self.collectionId = collectionId
+    }
+    
+    func fetchPosts() {
         isLoading = true
         Task {
             do {
@@ -24,6 +31,7 @@ class PostsViewModel: ObservableObject {
                     self.posts = fetchedPosts
                     self.collectionName = fetchedPosts.first?.collectionName ?? ""
                     self.isLoading = false
+                    self.scrollToLastViewedPosition()
                 }
             } catch {
                 print("Error fetching posts: \(error)")
@@ -34,53 +42,87 @@ class PostsViewModel: ObservableObject {
             }
         }
     }
+    
+    func scrollToLastViewedPosition() {
+        currentIndex = positionTracker.getLastViewedPosition(collectionId: collectionId)
+    }
+    
+    func updateLastViewedPosition(_ position: Int) {
+        positionTracker.saveLastViewedPosition(collectionId: collectionId, position: position)
+    }
 }
 
 
+class CollectionPositionTracker: ObservableObject {
+    @AppStorage("lastViewedCollectionPositions") private var lastViewedPositionsData: Data = Data()
+    
+    private var lastViewedPositions: [String: Int] {
+        get {
+            (try? JSONDecoder().decode([String: Int].self, from: lastViewedPositionsData)) ?? [:]
+        }
+        set {
+            lastViewedPositionsData = (try? JSONEncoder().encode(newValue)) ?? Data()
+        }
+    }
+    
+    func saveLastViewedPosition(collectionId: String, position: Int) {
+        lastViewedPositions[collectionId] = position
+    }
+    
+    func getLastViewedPosition(collectionId: String) -> Int {
+        lastViewedPositions[collectionId] ?? 0
+    }
+}
+
 // MARK: - Main Models
 struct PostsView: View {
-    @StateObject private var viewModel = PostsViewModel()
-    @State private var currentIndex = 0
-    @Environment(\.presentationMode) var presentationMode
-    let collectionId: String
+    @StateObject private var viewModel: PostsViewModel
+        @Environment(\.presentationMode) var presentationMode
 
-    var body: some View {
-        GeometryReader { geometry in
-            ZStack(alignment: .top) {
-                if viewModel.isLoading {
-                    ProgressView()
-                        .frame(width: geometry.size.width, height: geometry.size.height)
-                } else {
-                    VerticalPagingView(
-                        currentIndex: $currentIndex,
-                        items: viewModel.posts,
-                        itemContent: { post in
-                            PostCardContainer(post: post)
-                                .frame(width: geometry.size.width, height: geometry.size.height)
+        init(collectionId: String) {
+            _viewModel = StateObject(wrappedValue: PostsViewModel(collectionId: collectionId))
+        }
+
+        var body: some View {
+            GeometryReader { geometry in
+                ZStack(alignment: .top) {
+                    if viewModel.isLoading {
+                        ProgressView()
+                            .frame(width: geometry.size.width, height: geometry.size.height)
+                    } else {
+                        VerticalPagingView(
+                            currentIndex: $viewModel.currentIndex,
+                            items: viewModel.posts,
+                            itemContent: { post in
+                                PostCardContainer(post: post)
+                                    .frame(width: geometry.size.width, height: geometry.size.height)
+                            }
+                        )
+                        .onChange(of: viewModel.currentIndex) { oldValue, newValue in
+                            viewModel.updateLastViewedPosition(newValue)
                         }
-                    )
-                }
-                
-                VStack {
-                    HStack {
-                        backButton
-                        Spacer()
-                        collectionNameLabel
+                    }
+                    
+                    VStack {
+                        HStack {
+                            backButton
+                            Spacer()
+                            collectionNameLabel
+                            Spacer()
+                        }
+                        .padding(.horizontal)
+                        .padding(.top)
+                        
                         Spacer()
                     }
-                    .padding(.horizontal)
-                    .padding(.top)
-                    
-                    Spacer()
                 }
             }
+            .statusBar(hidden: true)
+            .onAppear {
+                viewModel.fetchPosts()
+            }
+            .navigationBarBackButtonHidden()
         }
-        .statusBar(hidden: true)
-        .onAppear {
-            viewModel.fetchPosts(for: collectionId)
-        }
-        .navigationBarBackButtonHidden()
-    }
     
     private var backButton: some View {
         Button(action: {
