@@ -1,10 +1,3 @@
-//
-//  LibraryView.swift
-//  Flash Story
-//
-//  Created by Hiếu Nguyễn Minh on 9/18/24.
-//
-
 import SwiftUI
 
 // MARK: - View Models
@@ -15,8 +8,14 @@ class LibraryViewModel: ObservableObject {
     @Published var collections: [CollectionView] = []
     @Published var lastViewedPositions: [String: Int] = [:]
     @Published var isLoading: Bool = false
+    @Published var selectedTab: TabType = .inProgress
     
     private let collectionService = CollectionService()
+    
+    enum TabType: String, CaseIterable {
+        case inProgress = "In Progress"
+        case finished = "Finished"
+    }
     
     init() {
         loadLastViewedPositions()
@@ -34,8 +33,7 @@ class LibraryViewModel: ObservableObject {
             do {
                 let fetchedCollections = try await collectionService.getAllCollections()
                 DispatchQueue.main.async {
-                    self.collections = fetchedCollections
-                    self.filterReadCollections()
+                    self.collections = fetchedCollections.filter { self.lastViewedPositions[$0.id] != nil }
                     self.isLoading = false
                 }
             } catch {
@@ -44,12 +42,6 @@ class LibraryViewModel: ObservableObject {
                     self.isLoading = false
                 }
             }
-        }
-    }
-    
-    private func filterReadCollections() {
-        collections = collections.filter { collection in
-            lastViewedPositions[collection.id] != nil
         }
     }
     
@@ -63,6 +55,42 @@ class LibraryViewModel: ObservableObject {
         let currentPost = min(lastPosition + 1, collection.posts.count)
         return (currentPost, collection.posts.count)
     }
+    
+    // Only show collections where the user has read all posts
+    var finishedCollections: [CollectionView] {
+        collections.filter { collection in
+            let progress = progressForCollection(collection)
+            return progress.current == progress.total
+        }
+    }
+    
+    // Show collections that the user is still reading
+    var inProgressCollections: [CollectionView] {
+        collections.filter { collection in
+            let progress = progressForCollection(collection)
+            return progress.current < progress.total
+        }
+    }
+    
+    // Restart a finished collection
+    func restartCollection(_ collection: CollectionView) {
+        lastViewedPositions[collection.id] = 0
+        saveLastViewedPositions()
+        updateProgress()
+    }
+    
+    // Delete a collection from AppStorage and the view
+    func deleteCollection(_ collection: CollectionView) {
+        collections.removeAll { $0.id == collection.id }
+        lastViewedPositions.removeValue(forKey: collection.id)
+        saveLastViewedPositions()
+    }
+    
+    private func saveLastViewedPositions() {
+        if let encoded = try? JSONEncoder().encode(lastViewedPositions) {
+            lastViewedPositionsData = encoded
+        }
+    }
 }
 
 // MARK: - Main View
@@ -74,13 +102,27 @@ struct LibraryView: View {
     
     var body: some View {
         NavigationStack {
-            Group {
-                if viewModel.isLoading {
-                    ProgressView()
-                } else if viewModel.collections.isEmpty {
-                    emptyLibraryView
-                } else {
-                    libraryContentView
+            VStack {
+                Picker("Collections", selection: $viewModel.selectedTab) {
+                    ForEach(LibraryViewModel.TabType.allCases, id: \.self) { tab in
+                        Text(tab.rawValue)
+                    }
+                }
+                .pickerStyle(SegmentedPickerStyle())
+                .padding()
+                
+                Group {
+                    if viewModel.isLoading {
+                        ProgressView()
+                    } else if viewModel.collections.isEmpty {
+                        emptyLibraryView
+                    } else {
+                        if viewModel.selectedTab == .inProgress {
+                            inProgressTab
+                        } else {
+                            finishedTab
+                        }
+                    }
                 }
             }
             .onAppear {
@@ -89,18 +131,40 @@ struct LibraryView: View {
         }
     }
     
-    private var libraryContentView: some View {
+    private var inProgressTab: some View {
         ScrollView {
             LazyVGrid(columns: columns, spacing: 20) {
-                ForEach(viewModel.collections) { collection in
+                ForEach(viewModel.inProgressCollections) { collection in
                     NavigationLink(destination: PostsView(collectionId: collection.id)) {
-                        CollectionCard(collection: collection, progress: viewModel.progressForCollection(collection))
+                        CollectionCard(
+                            collection: collection,
+                            progress: viewModel.progressForCollection(collection),
+                            onDelete: { viewModel.deleteCollection(collection) }
+                        )
                     }
                 }
             }
             .padding()
         }
     }
+
+
+    private var finishedTab: some View {
+        ScrollView {
+            LazyVGrid(columns: columns, spacing: 20) {
+                ForEach(viewModel.finishedCollections) { collection in
+                    CollectionCard(
+                        collection: collection,
+                        progress: nil,
+                        onRestart: { viewModel.restartCollection(collection) },
+                        onDelete: { viewModel.deleteCollection(collection) }
+                    )
+                }
+            }
+            .padding()
+        }
+    }
+
     
     private var emptyLibraryView: some View {
         VStack(spacing: 20) {
@@ -118,21 +182,45 @@ struct LibraryView: View {
 
 struct CollectionCard: View {
     let collection: CollectionView
-    let progress: (current: Int, total: Int)
+    let progress: (current: Int, total: Int)?
+    var onRestart: (() -> Void)? = nil
+    var onDelete: (() -> Void)? = nil
     
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text(collection.name)
-                .font(.headline)
-                .lineLimit(1)
-                .foregroundStyle(Color.primary)
+            HStack {
+                Text(collection.name)
+                    .font(.headline)
+                    .lineLimit(1)
+                    .foregroundStyle(Color.primary)
+                
+                Spacer()
+                
+                if let onDelete = onDelete {
+                    Button(action: onDelete) {
+                        Image(systemName: "trash")
+                            .foregroundColor(.red)
+                    }
+                }
+            }
             
-            ProgressView(value: Double(progress.current), total: Double(progress.total))
-                .accentColor(.blue)
             
-            Text("\(progress.current)/\(progress.total) posts")
-                .font(.caption)
-                .foregroundColor(.secondary)
+            if let progress = progress {
+                ProgressView(value: Double(progress.current), total: Double(progress.total))
+                    .accentColor(.blue)
+                Text("\(progress.current)/\(progress.total) posts")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+            
+            
+            if let onRestart = onRestart {
+                Button(action: onRestart) {
+                    Text("Restart")
+                        .font(.caption)
+                        .foregroundColor(.blue)
+                }
+            }
         }
         .padding()
         .background(Color(.systemBackground))
@@ -141,24 +229,8 @@ struct CollectionCard: View {
     }
 }
 
-struct CollectionDetailView: View {
-    let collection: Collection
-    
-    var body: some View {
-        List(collection.posts, id: \.id) { post in
-            VStack(alignment: .leading, spacing: 5) {
-                Text(post.content[0])
-                    .font(.body)
-                Text(post.collectionName)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            }
-            .padding(.vertical, 5)
-        }
-        .navigationTitle(collection.name)
-    }
-}
 
+// MARK: - Preview
 
 #Preview {
     LibraryView(navigationPath: .constant(NavigationPath()))
