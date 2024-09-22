@@ -31,4 +31,14 @@ enum Reaction: String, CaseIterable {
         case .interesting: return "🤔"
         }
     }
+    
+    var name: String {
+        switch self {
+        case .like: return "Like"
+        case .mindBlowing: return "Mind Blowing"
+        case .alreadyKnew: return "Already Knew"
+        case .hardToBelieve: return "Hard to Believe"
+        case .interesting: return "Interesting"
+        }
+    }
 }

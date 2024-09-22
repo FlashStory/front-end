@@ -78,17 +78,36 @@ class PostsViewModel: ObservableObject {
     func reactToPost(postId: String, reaction: String) {
         Task {
             do {
-                let updatedReactions = try await postService.reactToPost(postId: postId, reaction: reaction)
-                DispatchQueue.main.async {
-                    if let index = self.posts.firstIndex(where: { $0.id == postId }) {
-                        self.posts[index].reactions = updatedReactions
+                let currentReaction = UserReactionTracker.shared.getReaction(postId: postId)
+                
+                if currentReaction == reaction {
+                    // User is un-reacting
+                    let updatedReactions = try await postService.reactToPost(postId: postId, reaction: reaction, amount: -1)
+                    UserReactionTracker.shared.removeReaction(postId: postId)
+                    updatePostReactions(postId: postId, reactions: updatedReactions)
+                } else {
+                    // User is changing reaction or reacting for the first time
+                    if let currentReaction = currentReaction {
+                        // Remove the previous reaction
+                        _ = try await postService.reactToPost(postId: postId, reaction: currentReaction, amount: -1)
                     }
+                    // Add the new reaction
+                    let updatedReactions = try await postService.reactToPost(postId: postId, reaction: reaction, amount: 1)
                     UserReactionTracker.shared.setReaction(postId: postId, reaction: reaction)
-                    self.objectWillChange.send()
+                    updatePostReactions(postId: postId, reactions: updatedReactions)
                 }
             } catch {
                 print("Error reacting to post: \(error)")
             }
+        }
+    }
+
+    private func updatePostReactions(postId: String, reactions: Reactions) {
+        DispatchQueue.main.async {
+            if let index = self.posts.firstIndex(where: { $0.id == postId }) {
+                self.posts[index].reactions = reactions
+            }
+            self.objectWillChange.send()
         }
     }
     
@@ -385,20 +404,44 @@ struct ReactionButton: View {
     let isSelected: Bool
     let action: () -> Void
     
+    @State private var isPressed = false
+    
     var body: some View {
-        Button(action: action) {
+        Button(action: {
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+                isPressed = true
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                isPressed = false
+            }
+            action()
+        }) {
             VStack {
+                if isSelected {
+                    Text(reaction.name)
+                        .font(.caption2)
+                        .foregroundColor(isSelected ? .orange : .primary)
+                        .lineLimit(1)
+                        .fixedSize()
+                }
                 Text(reaction.emoji)
                     .font(.title3)
+                    .overlay(
+                        Rectangle()
+                            .foregroundColor(.gray)
+                            .opacity(isSelected ? 0 : 0.5)
+                            .blendMode(.destinationOut)
+                    )
+                    .compositingGroup()
                 Text("\(count)")
                     .font(.footnote)
                     .foregroundColor(.primary)
             }
         }
-        .foregroundColor(isSelected ? .blue : .primary)
+        .scaleEffect(isPressed ? 1.2 : 1.0)
+        .animation(.spring(response: 0.3, dampingFraction: 0.6), value: isPressed)
     }
 }
-
 
 struct PostCard: View {
     let post: Post
