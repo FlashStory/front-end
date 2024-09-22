@@ -83,13 +83,6 @@ struct NavigationRow: View {
     }
 }
 
-struct SavedPostsView: View {
-    var body: some View {
-        Text("Saved Posts")
-            .navigationTitle("Saved Posts")
-    }
-}
-
 struct FavoriteCollectionsView: View {
     var body: some View {
         Text("Favorite Collections")

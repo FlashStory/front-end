@@ -170,6 +170,10 @@ class SavedPostsManager: ObservableObject {
     func isSaved(postId: String) -> Bool {
         savedPosts.contains(postId)
     }
+    
+    func getSavedPostIds() -> [String] {
+        Array(savedPosts)
+    }
 }
 
 

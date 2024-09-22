@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4A422F4F2CA09C2E004131EF /* SavedPostsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A422F4E2CA09C27004131EF /* SavedPostsView.swift */; };
 		4A6B710A2C9B94AB007482AE /* PostsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A6B71092C9B94AB007482AE /* PostsView.swift */; };
 		4A6B710D2C9B9514007482AE /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A6B710C2C9B9514007482AE /* ProfileView.swift */; };
 		4A6B71122C9BA71D007482AE /* LibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A6B71112C9BA71D007482AE /* LibraryView.swift */; };
@@ -44,6 +45,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		4A422F4E2CA09C27004131EF /* SavedPostsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SavedPostsView.swift; sourceTree = "<group>"; };
 		4A6B71092C9B94AB007482AE /* PostsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostsView.swift; sourceTree = "<group>"; };
 		4A6B710C2C9B9514007482AE /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
 		4A6B71112C9BA71D007482AE /* LibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryView.swift; sourceTree = "<group>"; };
@@ -94,6 +96,7 @@
 		4A6B710B2C9B94EC007482AE /* Profile */ = {
 			isa = PBXGroup;
 			children = (
+				4A422F4E2CA09C27004131EF /* SavedPostsView.swift */,
 				4A6B710C2C9B9514007482AE /* ProfileView.swift */,
 			);
 			path = Profile;
@@ -384,6 +387,7 @@
 				4AA075EF2C9C878700974959 /* Post.swift in Sources */,
 				4AA075F52C9C93E800974959 /* PostService.swift in Sources */,
 				4A6B710A2C9B94AB007482AE /* PostsView.swift in Sources */,
+				4A422F4F2CA09C2E004131EF /* SavedPostsView.swift in Sources */,
 				4A6B71122C9BA71D007482AE /* LibraryView.swift in Sources */,
 				4AA075ED2C9C876400974959 /* Collection.swift in Sources */,
 				4AE1EF962C9A29FC00BA2C84 /* ContentView.swift in Sources */,

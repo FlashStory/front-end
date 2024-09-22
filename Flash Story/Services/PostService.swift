@@ -20,6 +20,20 @@ class PostService {
         return try decoder.decode([Post].self, from: data)
     }
     
+    func getPostById(postId: String) async throws -> Post {
+        let url = URL(string: "\(baseURL)/posts/\(postId)")!
+        let (data, response) = try await URLSession.shared.data(from: url)
+        
+        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+            throw NSError(domain: "PostService", code: 404, userInfo: [NSLocalizedDescriptionKey: "Post not found"])
+        }
+        
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        
+        return try decoder.decode(Post.self, from: data)
+    }
+    
     func reactToPost(postId: String, reaction: String, amount: Int) async throws -> Reactions {
         let url = URL(string: "\(baseURL)/posts/\(postId)/react")!
         var request = URLRequest(url: url)
