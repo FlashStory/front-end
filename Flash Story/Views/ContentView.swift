@@ -14,7 +14,7 @@ struct ContentView: View {
                             .padding(.bottom, tabBarHeight)
                             .tag(0)
                         
-                        PostsView(collectionId: "66ef2bc3a375cf13126ffa57")
+                        ExploreView()
                             .padding(.bottom, tabBarHeight)
                             .tag(1)
                         

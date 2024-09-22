@@ -34,6 +34,16 @@ class PostService {
         return try decoder.decode(Post.self, from: data)
     }
     
+    func getRandomPosts(count: Int) async throws -> [Post] {
+        let url = URL(string: "\(baseURL)/posts/random?count=\(count)")!
+        let (data, _) = try await URLSession.shared.data(from: url)
+        
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+
+        return try decoder.decode([Post].self, from: data)
+    }
+    
     func reactToPost(postId: String, reaction: String, amount: Int) async throws -> Reactions {
         let url = URL(string: "\(baseURL)/posts/\(postId)/react")!
         var request = URLRequest(url: url)
