@@ -19,4 +19,17 @@ class PostService {
 
         return try decoder.decode([Post].self, from: data)
     }
+    
+    func reactToPost(postId: String, reaction: String) async throws -> Reactions {
+        let url = URL(string: "\(baseURL)/posts/\(postId)/react")!
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        let body = ["reaction": reaction]
+        request.httpBody = try JSONEncoder().encode(body)
+        
+        let (data, _) = try await URLSession.shared.data(for: request)
+        return try JSONDecoder().decode(Reactions.self, from: data)
+    }
 }

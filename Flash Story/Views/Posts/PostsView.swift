@@ -74,6 +74,27 @@ class PostsViewModel: ObservableObject {
     func updateLastViewedPosition(_ position: Int) {
         positionTracker.saveLastViewedPosition(collectionId: collectionId, position: position)
     }
+    
+    func reactToPost(postId: String, reaction: String) {
+        Task {
+            do {
+                let updatedReactions = try await postService.reactToPost(postId: postId, reaction: reaction)
+                DispatchQueue.main.async {
+                    if let index = self.posts.firstIndex(where: { $0.id == postId }) {
+                        self.posts[index].reactions = updatedReactions
+                    }
+                    UserReactionTracker.shared.setReaction(postId: postId, reaction: reaction)
+                    self.objectWillChange.send()
+                }
+            } catch {
+                print("Error reacting to post: \(error)")
+            }
+        }
+    }
+    
+    func getUserReaction(postId: String) -> String? {
+        return UserReactionTracker.shared.getReaction(postId: postId)
+    }
 }
 
 
@@ -151,6 +172,34 @@ class CollectionPositionTracker: ObservableObject {
     
     func getLastViewedPosition(collectionId: String) -> Int {
         lastViewedPositions[collectionId] ?? 0
+    }
+}
+
+
+class UserReactionTracker: ObservableObject {
+    static let shared = UserReactionTracker()
+    
+    @AppStorage("userReactions") private var userReactionsData: Data = Data()
+    
+    private var userReactions: [String: String] {
+        get {
+            (try? JSONDecoder().decode([String: String].self, from: userReactionsData)) ?? [:]
+        }
+        set {
+            userReactionsData = (try? JSONEncoder().encode(newValue)) ?? Data()
+        }
+    }
+    
+    func setReaction(postId: String, reaction: String) {
+        userReactions[postId] = reaction
+    }
+    
+    func getReaction(postId: String) -> String? {
+        return userReactions[postId]
+    }
+    
+    func removeReaction(postId: String) {
+        userReactions.removeValue(forKey: postId)
     }
 }
 
@@ -284,7 +333,7 @@ struct PostCardContainer: View {
                     .frame(width: geometry.size.width * 0.9, height: geometry.size.height * 0.7)
                 
                 HStack {
-                    ReactionBar(reactions: post.reactions)
+                    ReactionBar(viewModel: viewModel, post: post)
                     
                     Spacer()
                     
@@ -302,13 +351,18 @@ struct PostCardContainer: View {
 }
 
 struct ReactionBar: View {
-    @State var reactions: Reactions
+    @ObservedObject var viewModel: PostsViewModel
+    let post: Post
     
     var body: some View {
         HStack(spacing: 15) {
             ForEach(Reaction.allCases, id: \.self) { reaction in
-                ReactionButton(reaction: reaction, count: reactionCount(for: reaction)) {
-                    incrementReaction(reaction)
+                ReactionButton(
+                    reaction: reaction,
+                    count: reactionCount(for: reaction),
+                    isSelected: viewModel.getUserReaction(postId: post.id) == reaction.rawValue
+                ) {
+                    viewModel.reactToPost(postId: post.id, reaction: reaction.rawValue)
                 }
             }
         }
@@ -316,24 +370,32 @@ struct ReactionBar: View {
     
     private func reactionCount(for reaction: Reaction) -> Int {
         switch reaction {
-        case .like: return reactions.like
-        case .mindBlowing: return reactions.mindBlowing
-        case .alreadyKnew: return reactions.alreadyKnew
-        case .hardToBelieve: return reactions.hardToBelieve
-        case .interesting: return reactions.interesting
+        case .like: return post.reactions.like
+        case .mindBlowing: return post.reactions.mindBlowing
+        case .alreadyKnew: return post.reactions.alreadyKnew
+        case .hardToBelieve: return post.reactions.hardToBelieve
+        case .interesting: return post.reactions.interesting
         }
     }
+}
+
+struct ReactionButton: View {
+    let reaction: Reaction
+    let count: Int
+    let isSelected: Bool
+    let action: () -> Void
     
-    private func incrementReaction(_ reaction: Reaction) {
-        withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
-            switch reaction {
-            case .like: reactions.like += 1
-            case .mindBlowing: reactions.mindBlowing += 1
-            case .alreadyKnew: reactions.alreadyKnew += 1
-            case .hardToBelieve: reactions.hardToBelieve += 1
-            case .interesting: reactions.interesting += 1
+    var body: some View {
+        Button(action: action) {
+            VStack {
+                Text(reaction.emoji)
+                    .font(.title3)
+                Text("\(count)")
+                    .font(.footnote)
+                    .foregroundColor(.primary)
             }
         }
+        .foregroundColor(isSelected ? .blue : .primary)
     }
 }
 
@@ -378,33 +440,6 @@ struct PageControl: View {
                     .frame(width: 8, height: 8)
             }
         }
-    }
-}
-
-struct ReactionButton: View {
-    let reaction: Reaction
-    let count: Int
-    let action: () -> Void
-    @State private var isPressed = false
-    
-    var body: some View {
-        Button(action: {
-            isPressed = true
-            action()
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                isPressed = false
-            }
-        }) {
-            VStack {
-                Text(reaction.emoji)
-                    .font(.title3)
-                Text("\(count)")
-                    .font(.footnote)
-                    .foregroundColor(.primary)
-            }
-        }
-        .scaleEffect(isPressed ? 1.5 : 1.0)
-        .animation(.spring(response: 0.2, dampingFraction: 0.5), value: isPressed)
     }
 }
 
