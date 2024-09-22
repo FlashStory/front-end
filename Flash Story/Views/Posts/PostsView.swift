@@ -13,12 +13,14 @@ class PostsViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var collectionName: String = ""
     @Published var currentIndex = 0
+    @Published var isFavorite: Bool = false
     private let postService = PostService()
     private let positionTracker = CollectionPositionTracker()
     let collectionId: String
     
     init(collectionId: String) {
         self.collectionId = collectionId
+        self.isFavorite = FavoriteCollectionsManager.shared.isFavorite(collectionId: collectionId)
     }
     
     func fetchPosts() {
@@ -43,12 +45,90 @@ class PostsViewModel: ObservableObject {
         }
     }
     
+    func toggleFavorite() {
+        isFavorite.toggle()
+        if isFavorite {
+            FavoriteCollectionsManager.shared.addFavorite(collectionId: collectionId, name: collectionName)
+        } else {
+            FavoriteCollectionsManager.shared.removeFavorite(collectionId: collectionId)
+        }
+    }
+    
+    func toggleSaved(postId: String) {
+        if SavedPostsManager.shared.isSaved(postId: postId) {
+            SavedPostsManager.shared.unsavePost(postId: postId)
+        } else {
+            SavedPostsManager.shared.savePost(postId: postId)
+        }
+        objectWillChange.send()
+    }
+    
+    func isSaved(postId: String) -> Bool {
+        SavedPostsManager.shared.isSaved(postId: postId)
+    }
+    
     func scrollToLastViewedPosition() {
         currentIndex = positionTracker.getLastViewedPosition(collectionId: collectionId)
     }
     
     func updateLastViewedPosition(_ position: Int) {
         positionTracker.saveLastViewedPosition(collectionId: collectionId, position: position)
+    }
+}
+
+
+class FavoriteCollectionsManager: ObservableObject {
+    static let shared = FavoriteCollectionsManager()
+    
+    @AppStorage("favoriteCollections") private var favoriteCollectionsData: Data = Data()
+    
+    private var favoriteCollections: [String: String] {
+        get {
+            (try? JSONDecoder().decode([String: String].self, from: favoriteCollectionsData)) ?? [:]
+        }
+        set {
+            favoriteCollectionsData = (try? JSONEncoder().encode(newValue)) ?? Data()
+        }
+    }
+    
+    func addFavorite(collectionId: String, name: String) {
+        favoriteCollections[collectionId] = name
+    }
+    
+    func removeFavorite(collectionId: String) {
+        favoriteCollections.removeValue(forKey: collectionId)
+    }
+    
+    func isFavorite(collectionId: String) -> Bool {
+        favoriteCollections.keys.contains(collectionId)
+    }
+}
+
+
+class SavedPostsManager: ObservableObject {
+    static let shared = SavedPostsManager()
+    
+    @AppStorage("savedPosts") private var savedPostsData: Data = Data()
+    
+    private var savedPosts: Set<String> {
+        get {
+            (try? JSONDecoder().decode(Set<String>.self, from: savedPostsData)) ?? []
+        }
+        set {
+            savedPostsData = (try? JSONEncoder().encode(newValue)) ?? Data()
+        }
+    }
+    
+    func savePost(postId: String) {
+        savedPosts.insert(postId)
+    }
+    
+    func unsavePost(postId: String) {
+        savedPosts.remove(postId)
+    }
+    
+    func isSaved(postId: String) -> Bool {
+        savedPosts.contains(postId)
     }
 }
 
@@ -77,52 +157,53 @@ class CollectionPositionTracker: ObservableObject {
 // MARK: - Main View
 struct PostsView: View {
     @StateObject private var viewModel: PostsViewModel
-        @Environment(\.presentationMode) var presentationMode
+    @Environment(\.presentationMode) var presentationMode
 
-        init(collectionId: String) {
-            _viewModel = StateObject(wrappedValue: PostsViewModel(collectionId: collectionId))
-        }
+    init(collectionId: String) {
+        _viewModel = StateObject(wrappedValue: PostsViewModel(collectionId: collectionId))
+    }
 
-        var body: some View {
-            GeometryReader { geometry in
-                ZStack(alignment: .top) {
-                    if viewModel.isLoading {
-                        ProgressView()
-                            .frame(width: geometry.size.width, height: geometry.size.height)
-                    } else {
-                        VerticalPagingView(
-                            currentIndex: $viewModel.currentIndex,
-                            items: viewModel.posts,
-                            itemContent: { post in
-                                PostCardContainer(post: post)
-                                    .frame(width: geometry.size.width, height: geometry.size.height)
-                            }
-                        )
-                        .onChange(of: viewModel.currentIndex) { oldValue, newValue in
-                            viewModel.updateLastViewedPosition(newValue)
+    var body: some View {
+        GeometryReader { geometry in
+            ZStack(alignment: .top) {
+                if viewModel.isLoading {
+                    ProgressView()
+                        .frame(width: geometry.size.width, height: geometry.size.height)
+                } else {
+                    VerticalPagingView(
+                        currentIndex: $viewModel.currentIndex,
+                        items: viewModel.posts,
+                        itemContent: { post in
+                            PostCardContainer(post: post, viewModel: viewModel)
+                                .frame(width: geometry.size.width, height: geometry.size.height)
                         }
-                    }
-                    
-                    VStack {
-                        HStack {
-                            backButton
-                            Spacer()
-                            collectionNameLabel
-                            Spacer()
-                        }
-                        .padding(.horizontal)
-                        .padding(.top)
-                        
-                        Spacer()
+                    )
+                    .onChange(of: viewModel.currentIndex) { oldValue, newValue in
+                        viewModel.updateLastViewedPosition(newValue)
                     }
                 }
+                
+                VStack {
+                    HStack {
+                        backButton
+                        Spacer()
+                        collectionNameLabel
+                        Spacer()
+                        favoriteButton
+                    }
+                    .padding(.horizontal)
+                    .padding(.top)
+                    
+                    Spacer()
+                }
             }
-            .statusBar(hidden: true)
-            .onAppear {
-                viewModel.fetchPosts()
-            }
-            .navigationBarBackButtonHidden()
         }
+        .statusBar(hidden: true)
+        .onAppear {
+            viewModel.fetchPosts()
+        }
+        .navigationBarBackButtonHidden()
+    }
     
     private var backButton: some View {
         Button(action: {
@@ -139,6 +220,16 @@ struct PostsView: View {
             .font(.title3)
             .fontWeight(.semibold)
             .foregroundColor(.primary)
+    }
+    
+    private var favoriteButton: some View {
+        Button(action: {
+            viewModel.toggleFavorite()
+        }) {
+            Image(systemName: viewModel.isFavorite ? "heart.fill" : "heart")
+                .foregroundColor(viewModel.isFavorite ? .red : .gray)
+                .font(.title3)
+        }
     }
 }
 
@@ -184,7 +275,7 @@ struct VerticalPagingView<Item: Identifiable, Content: View>: View {
 
 struct PostCardContainer: View {
     let post: Post
-    @State private var savedState: Bool = false
+    @ObservedObject var viewModel: PostsViewModel
     
     var body: some View {
         GeometryReader { geometry in
@@ -197,7 +288,10 @@ struct PostCardContainer: View {
                     
                     Spacer()
                     
-                    SaveButton(isSaved: $savedState)
+                    SaveButton(isSaved: Binding(
+                        get: { viewModel.isSaved(postId: post.id) },
+                        set: { _ in viewModel.toggleSaved(postId: post.id) }
+                    ))
                 }
                 .padding(.horizontal, geometry.size.width * 0.05)
                 .frame(width: geometry.size.width * 0.9)
@@ -319,9 +413,7 @@ struct SaveButton: View {
     
     var body: some View {
         Button(action: {
-            withAnimation {
-                isSaved.toggle()
-            }
+            isSaved.toggle()
         }) {
             Image(systemName: isSaved ? "bookmark.fill" : "bookmark")
                 .font(.system(size: 24))
