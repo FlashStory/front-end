@@ -28,7 +28,7 @@ struct ProfileHeader: View {
                 .resizable()
                 .aspectRatio(contentMode: .fit)
                 .frame(width: 120, height: 120)
-                .foregroundColor(.blue)
+                .foregroundColor(.orange)
                 .background(Circle().fill(Color.white).shadow(radius: 5))
 
             Text("Flash Story User")
@@ -51,7 +51,7 @@ struct NavigationLinksSection: View {
             }
 
             NavigationLink(destination: FavoriteCollectionsView()) {
-                NavigationRow(title: "Favorite Collections", iconName: "star.fill")
+                NavigationRow(title: "Favorite Collections", iconName: "heart.fill")
             }
         }
     }
@@ -65,7 +65,7 @@ struct NavigationRow: View {
     var body: some View {
         HStack {
             Image(systemName: iconName)
-                .foregroundColor(.blue)
+                .foregroundColor(.orange)
                 .frame(width: 30)
 
             Text(title)
@@ -80,13 +80,6 @@ struct NavigationRow: View {
         .padding()
         .background(Color(UIColor.secondarySystemBackground))
         .cornerRadius(15)
-    }
-}
-
-struct FavoriteCollectionsView: View {
-    var body: some View {
-        Text("Favorite Collections")
-            .navigationTitle("Favorite Collections")
     }
 }
 

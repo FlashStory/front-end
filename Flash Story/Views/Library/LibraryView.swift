@@ -190,9 +190,11 @@ struct CollectionCard: View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
                 Text(collection.name)
+                    .multilineTextAlignment(.leading)
                     .font(.headline)
-                    .lineLimit(1)
+                    .lineLimit(2)
                     .foregroundStyle(Color.primary)
+                    .frame(height: 50)
                 
                 Spacer()
                 
@@ -207,7 +209,7 @@ struct CollectionCard: View {
             
             if let progress = progress {
                 ProgressView(value: Double(progress.current), total: Double(progress.total))
-                    .accentColor(.blue)
+                    .accentColor(.orange)
                 Text("\(progress.current)/\(progress.total) posts")
                     .font(.caption)
                     .foregroundColor(.secondary)
@@ -217,7 +219,7 @@ struct CollectionCard: View {
             if let onRestart = onRestart {
                 Button(action: onRestart) {
                     Text("Restart")
-                        .font(.caption)
+                        .font(.callout)
                         .foregroundColor(.blue)
                 }
             }

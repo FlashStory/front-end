@@ -142,6 +142,10 @@ class FavoriteCollectionsManager: ObservableObject {
     func isFavorite(collectionId: String) -> Bool {
         favoriteCollections.keys.contains(collectionId)
     }
+    
+    func getFavoriteCollections() -> [String: String] {
+        return favoriteCollections
+    }
 }
 
 
