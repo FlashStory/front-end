@@ -7,7 +7,6 @@
 
 import SwiftUI
 
-
 // MARK: - View Models
 class PostsViewModel: ObservableObject {
     @Published var posts: [Post] = []
@@ -32,6 +31,7 @@ class PostsViewModel: ObservableObject {
                     self.collectionName = fetchedPosts.first?.collectionName ?? ""
                     self.isLoading = false
                     self.scrollToLastViewedPosition()
+                    self.updateLastViewedPosition(self.currentIndex)
                 }
             } catch {
                 print("Error fetching posts: \(error)")
@@ -74,7 +74,7 @@ class CollectionPositionTracker: ObservableObject {
     }
 }
 
-// MARK: - Main Models
+// MARK: - Main View
 struct PostsView: View {
     @StateObject private var viewModel: PostsViewModel
         @Environment(\.presentationMode) var presentationMode
@@ -330,49 +330,6 @@ struct SaveButton: View {
     }
 }
 
-// Sample data
-//let samplePosts = [
-//    Post(
-//        id: "as1312423",
-//        content: [
-//            "A day on Venus is longer than its year. Venus rotates so slowly that it takes 243 Earth days to complete one rotation. A day on Venus is longer than its year. Venus rotates so slowly that it takes 243 Earth days to complete one rotation. A day on Venus is longer than its year. Venus rotates so slowly that it takes 243 Earth days to complete one rotation.",
-//            "But it only takes 225 Earth days to complete one orbit of the Sun.",
-//            "This means that on Venus, a day is longer than a year!"
-//        ],
-//        collectionId: "66eb9d588eb2e6165940e898",
-//        collectionName: "Space Oddities",
-//        reactions: [.like: 120, .mindBlowing: 45, .alreadyKnew: 89, .hardToBelieve: 12, .interesting: 3]
-//    ),
-//    Post(
-//        id: "as123",
-//        content: [
-//            "The world's largest desert is Antarctica, not the Sahara.",
-//            "Antarctica is considered a desert because it receives very little precipitation.",
-//            "Despite being covered in ice, Antarctica's air is extremely dry, qualifying it as the world's largest desert."
-//        ],
-//        collectionId: "66eb9d588eb2e6165940e898",
-//        collectionName: "Nature's Jaw-Droppers",
-//        reactions: [.like: 95, .mindBlowing: 30, .alreadyKnew: 72, .hardToBelieve: 5, .interesting: 2]
-//    ),
-//    Post(
-//        id: "as112323",
-//        content: [
-//            "The first computer 'bug' was an actual insect.",
-//            "In 1947, operators of the Mark II computer at Harvard University found a moth trapped in a relay and taped it in their logbook.",
-//            "This incident popularized the term 'bug' in computer science, though the term existed before in other contexts."
-//        ],
-//        collectionId: "66eb9d588eb2e6165940e898",
-//        collectionName: "Tech Time Bombs",
-//        reactions: [.like: 110, .mindBlowing: 25, .alreadyKnew: 45, .hardToBelieve: 80, .interesting: 0]
-//    )
-//]
-
-//struct PostsView_Previews: PreviewProvider {
-//    static var previews: some View {
-//        PostsView()
-//    }
-//}
-
 #Preview {
-    PostsView(collectionId: "66eb9d588eb2e6165940e8c0")
+    PostsView(collectionId: "66ef2bc3a375cf13126ffa57")
 }

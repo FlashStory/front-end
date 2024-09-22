@@ -18,7 +18,7 @@ struct ContentView: View {
                             .padding(.bottom, tabBarHeight)
                             .tag(1)
                         
-                        LibraryView()
+                        LibraryView(navigationPath: $navigationPath)
                             .padding(.bottom, tabBarHeight)
                             .tag(2)
                         
