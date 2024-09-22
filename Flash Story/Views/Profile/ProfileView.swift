@@ -1,64 +1,55 @@
-//
-//  ProfileView.swift
-//  Flash Story
-//
-//  Created by Hiếu Nguyễn Minh on 9/18/24.
-//
-
 import SwiftUI
 
 struct ProfileView: View {
+
     @StateObject private var viewModel = ProfileViewModel()
-    @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(\.colorScheme) private var colorScheme
-    
+
     var body: some View {
         ScrollView {
-            VStack(spacing: 30) {
+            VStack(spacing: 40) {
                 ProfileHeader()
-               
+
                 NavigationLinksSection()
             }
             .padding()
         }
-//        .navigationTitle("Profile")
-        .navigationBarTitleDisplayMode(.large)
-        .background(backgroundColor)
+        .ignoresSafeArea(edges: .top)
     }
-    
-    private var backgroundColor: Color {
-        colorScheme == .dark ? Color(.systemBackground) : Color(.systemGroupedBackground)
-    }
+
 }
 
 struct ProfileHeader: View {
     @Environment(\.colorScheme) private var colorScheme
-    
+
     var body: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 24) {
             Image(systemName: "person.circle.fill")
                 .resizable()
                 .aspectRatio(contentMode: .fit)
-                .frame(width: 100, height: 100)
+                .frame(width: 120, height: 120)
                 .foregroundColor(.blue)
-            
+                .background(Circle().fill(Color.white).shadow(radius: 5))
+
             Text("Flash Story User")
-                .font(.title2)
-                .fontWeight(.semibold)
+                .font(.title)
+                .fontWeight(.bold)
+                .foregroundColor(.primary)
+
         }
         .padding()
-        .background(colorScheme == .dark ? Color(.systemGray6) : .white)
-        .cornerRadius(15)
+        .cornerRadius(20)
+        .shadow(color: colorScheme == .dark ? .black.opacity(0.3) : .gray.opacity(0.2), radius: 10)
     }
 }
 
 struct NavigationLinksSection: View {
     var body: some View {
-        VStack(spacing: 20) {
+        VStack(spacing: 25) {
             NavigationLink(destination: SavedPostsView()) {
                 NavigationRow(title: "Saved Posts", iconName: "bookmark.fill")
             }
-            
+
             NavigationLink(destination: FavoriteCollectionsView()) {
                 NavigationRow(title: "Favorite Collections", iconName: "star.fill")
             }
@@ -70,31 +61,28 @@ struct NavigationRow: View {
     let title: String
     let iconName: String
     @Environment(\.colorScheme) private var colorScheme
-    
+
     var body: some View {
         HStack {
             Image(systemName: iconName)
-                .foregroundColor(.gray)
+                .foregroundColor(.blue)
                 .frame(width: 30)
-            
+
             Text(title)
                 .font(.headline)
-                .foregroundStyle(Color.primary)
-            
+                .foregroundColor(.primary)
+
             Spacer()
-            
+
             Image(systemName: "chevron.right")
-                .foregroundColor(.gray)
+                .foregroundColor(.primary)
         }
         .padding()
-        .background(colorScheme == .dark ? Color(.systemGray6) : .white)
-        .cornerRadius(10)
-        .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.3 : 0.1),
-                radius: 5, x: 0, y: 2)
+        .background(Color(UIColor.secondarySystemBackground))
+        .cornerRadius(15)
     }
 }
 
-// Placeholder views for navigation
 struct SavedPostsView: View {
     var body: some View {
         Text("Saved Posts")
@@ -112,16 +100,14 @@ struct FavoriteCollectionsView: View {
 class ProfileViewModel: ObservableObject {
     @Published var savedPosts: [Post] = []
     @Published var favoriteCollections: [Collection] = []
-    
+
     init() {
-        // Fetch data or initialize with dummy data
         fetchProfileData()
     }
-    
+
     private func fetchProfileData() {
-        // Simulating data fetch
-        savedPosts = [Post]() // Your Post objects
-        favoriteCollections = [Collection]() // Your Collection objects
+        savedPosts = [Post]() // Simulate posts fetching
+        favoriteCollections = [Collection]() // Simulate collections fetching
     }
 }
 
