@@ -254,7 +254,11 @@ struct PostsView: View {
                                 .frame(width: geometry.size.width, height: geometry.size.height)
                         }
                     )
-                    .onChange(of: viewModel.currentIndex) { oldValue, newValue in
+//                    iOS 17 +
+//                    .onChange(of: viewModel.currentIndex) { oldValue, newValue in
+//                        viewModel.updateLastViewedPosition(newValue)
+//                    }
+                    .onChange(of: viewModel.currentIndex) { newValue in
                         viewModel.updateLastViewedPosition(newValue)
                     }
                 }

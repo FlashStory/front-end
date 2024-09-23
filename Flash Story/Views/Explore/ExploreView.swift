@@ -108,7 +108,13 @@ struct ExploreView: View {
                                 .frame(width: geometry.size.width, height: geometry.size.height)
                         }
                     )
-                    .onChange(of: viewModel.currentIndex) { oldValue, newValue in
+//                    iOS 17 +
+//                    .onChange(of: viewModel.currentIndex) { oldValue, newValue in
+//                        if newValue >= Int(Double(viewModel.posts.count) * 0.7) {
+//                            viewModel.fetchRandomPosts()
+//                        }
+//                    }
+                    .onChange(of: viewModel.currentIndex) { newValue in
                         if newValue >= Int(Double(viewModel.posts.count) * 0.7) {
                             viewModel.fetchRandomPosts()
                         }
