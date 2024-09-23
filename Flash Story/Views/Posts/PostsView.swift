@@ -234,6 +234,8 @@ class UserReactionTracker: ObservableObject {
 struct PostsView: View {
     @StateObject private var viewModel: PostsViewModel
     @Environment(\.presentationMode) var presentationMode
+    @State private var dragOffset: CGFloat = 0
+    @GestureState private var isDragging: Bool = false
 
     init(collectionId: String) {
         _viewModel = StateObject(wrappedValue: PostsViewModel(collectionId: collectionId))
@@ -254,10 +256,6 @@ struct PostsView: View {
                                 .frame(width: geometry.size.width, height: geometry.size.height)
                         }
                     )
-//                    iOS 17 +
-//                    .onChange(of: viewModel.currentIndex) { oldValue, newValue in
-//                        viewModel.updateLastViewedPosition(newValue)
-//                    }
                     .onChange(of: viewModel.currentIndex) { newValue in
                         viewModel.updateLastViewedPosition(newValue)
                     }
@@ -277,8 +275,30 @@ struct PostsView: View {
                     Spacer()
                 }
             }
+            // Back Button Gesture
+            .offset(x: max(0, dragOffset))
+                .animation(.interactiveSpring(), value: isDragging)
+                .simultaneousGesture(
+                    DragGesture()
+                        .updating($isDragging) { _, state, _ in
+                            state = true
+                        }
+                        .onChanged { value in
+                            if value.translation.width > 0 {
+                                dragOffset = value.translation.width
+                            }
+                        }
+                        .onEnded { value in
+                            if value.translation.width > geometry.size.width / 3 {
+                                self.presentationMode.wrappedValue.dismiss()
+                            } else {
+                                withAnimation(.spring()) {
+                                    dragOffset = 0
+                                }
+                            }
+                        }
+                )
         }
-        .statusBar(hidden: true)
         .onAppear {
             viewModel.fetchPosts()
         }

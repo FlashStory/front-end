@@ -137,7 +137,6 @@ struct ExploreView: View {
                 }
             }
         }
-        .statusBar(hidden: true)
         .onAppear {
             if viewModel.posts.isEmpty {
                 viewModel.fetchRandomPosts()
