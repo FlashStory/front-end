@@ -45,7 +45,20 @@ struct HomeView: View {
     var body: some View {
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 20) {
-//                    SearchBar(text: $viewModel.searchText)
+                    HStack {
+                        Text("Flash")
+                            .foregroundColor(.orange)
+                        Text("Story")
+                            .foregroundColor(.primary)
+                    }
+                    .font(.largeTitle)
+                    .fontWeight(.semibold)
+                    .padding()
+                    .frame(maxWidth: .infinity)
+                        
+                    Divider()
+                        .foregroundStyle(Color.primary)
+                    //                    SearchBar(text: $viewModel.searchText)
                     HotTopicsView(collections: viewModel.collections.prefix(5), navigationPath: $navigationPath)
                     FactOfTheDayView()
                     FavoritesView(collections: viewModel.collections.filter { viewModel.favoriteTopics.contains($0.name) }, navigationPath: $navigationPath)
@@ -58,7 +71,7 @@ struct HomeView: View {
                 }
                 .padding()
             }
-//            .navigationTitle("Flash Story")
+            //            .navigationTitle("Flash Story")
             .sheet(isPresented: $viewModel.showAllTopics) {
                 AllTopicsView(collections: viewModel.collections, navigationPath: $navigationPath)
             }
@@ -152,11 +165,7 @@ struct MoreTopicsView: View {
                 Button(action: showAllAction) {
                     Text("Show All")
                         .font(.subheadline)
-                        .foregroundColor(.primary)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 6)
-                        .background(Color.secondary.opacity(0.1))
-                        .cornerRadius(20)
+                        .foregroundStyle(Color.primary)
                 }
             }
             

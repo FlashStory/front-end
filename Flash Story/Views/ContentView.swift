@@ -12,18 +12,22 @@ struct ContentView: View {
                     TabView(selection: $selectedTab) {
                         HomeView(navigationPath: $navigationPath)
                             .padding(.bottom, tabBarHeight)
+                            .padding(.top)
                             .tag(0)
                         
                         ExploreView()
                             .padding(.bottom, tabBarHeight)
+                            .padding(.top)
                             .tag(1)
                         
                         LibraryView(navigationPath: $navigationPath)
                             .padding(.bottom, tabBarHeight)
+                            .padding(.top)
                             .tag(2)
                         
                         ProfileView()
                             .padding(.bottom, tabBarHeight)
+                            .padding(.top)
                             .tag(3)
                     }
                     .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
@@ -35,7 +39,6 @@ struct ContentView: View {
                     .animation(.easeInOut, value: navigationPath.isEmpty)
                 }
             }
-            .edgesIgnoringSafeArea(.bottom)
             .navigationDestination(for: String.self) { collectionId in
                 PostsView(collectionId: collectionId)
             }
