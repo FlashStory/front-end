@@ -45,7 +45,7 @@ struct HomeView: View {
     var body: some View {
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 20) {
-                    SearchBar(text: $viewModel.searchText)
+//                    SearchBar(text: $viewModel.searchText)
                     HotTopicsView(collections: viewModel.collections.prefix(5), navigationPath: $navigationPath)
                     FactOfTheDayView()
                     FavoritesView(collections: viewModel.collections.filter { viewModel.favoriteTopics.contains($0.name) }, navigationPath: $navigationPath)

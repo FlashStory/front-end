@@ -8,7 +8,8 @@
 import Foundation
 
 class CollectionService {
-    private let baseURL = "http://localhost:3000/api"
+    //    private let baseURL = "http://localhost:3000/api"
+    private let baseURL = "https://flashstoryserver.azurewebsites.net/api"
     
     func getAllCollections() async throws -> [CollectionView] {
         let url = URL(string: "\(baseURL)/collections")!

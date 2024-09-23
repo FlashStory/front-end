@@ -8,7 +8,8 @@
 import Foundation
 
 class PostService {
-    private let baseURL = "http://localhost:3000/api"
+//    private let baseURL = "http://localhost:3000/api"
+    private let baseURL = "https://flashstoryserver.azurewebsites.net/api"
     
     func getPostsByCollection(collectionId: String) async throws -> [Post] {
         let url = URL(string: "\(baseURL)/posts/collection/\(collectionId)")!

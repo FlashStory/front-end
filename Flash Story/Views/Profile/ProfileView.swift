@@ -24,14 +24,15 @@ struct ProfileHeader: View {
 
     var body: some View {
         VStack(spacing: 24) {
-            Image(systemName: "person.circle.fill")
+            Image("ProfileLogo")
                 .resizable()
                 .aspectRatio(contentMode: .fit)
                 .frame(width: 120, height: 120)
+                .clipShape(Circle())
+                .overlay(Circle().stroke(Color.orange, lineWidth: 2))
                 .foregroundColor(.orange)
-                .background(Circle().fill(Color.white).shadow(radius: 5))
 
-            Text("Flash Story User")
+            Text("Flash Story")
                 .font(.title)
                 .fontWeight(.bold)
                 .foregroundColor(.primary)
