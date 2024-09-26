@@ -7,6 +7,9 @@ class HomeViewModel: ObservableObject {
     @Published var searchText = ""
     @Published var showAllTopics = false
     @Published var isLoading = true
+    @Published var isRefreshing = false
+    
+    private var hasLoadedInitialData = false
     
     let bigTopics: [String: [String]] = [
         "Nature": ["Ocean Life", "Space Exploration", "Rainforests", "Desert Ecosystems", "Mountain Ranges"],
@@ -23,18 +26,29 @@ class HomeViewModel: ObservableObject {
     
     private let collectionService = CollectionService()
     
-    func fetchCollections() {
+    func fetchCollections(forceRefresh: Bool = false) {
+        guard forceRefresh || !hasLoadedInitialData else { return }
+        
         Task {
             do {
-                self.isLoading = true
+                if forceRefresh {
+                    self.isRefreshing = true
+                } else if !hasLoadedInitialData {
+                    self.isLoading = true
+                }
+                
                 let fetchedCollections = try await collectionService.getAllCollections()
                 DispatchQueue.main.async {
                     self.collections = fetchedCollections
                     self.isLoading = false
+                    self.isRefreshing = false
+                    self.hasLoadedInitialData = true
                 }
             } catch {
                 DispatchQueue.main.async {
                     self.isLoading = false
+                    self.isRefreshing = false
+                    // Handle error (e.g., show error popup)
                 }
             }
         }
@@ -48,40 +62,43 @@ struct HomeView: View {
     @Binding var navigationPath: NavigationPath
     
     var body: some View {
-        Group {
+        ScrollView(showsIndicators: false) {
+            RefreshControl(coordinateSpace: .named("RefreshControl"), onRefresh: {
+                viewModel.fetchCollections(forceRefresh: true)
+            })
+            
             if viewModel.isLoading {
                 SkeletonLoadingView()
             } else {
-                ScrollView(showsIndicators: false) {
-                    VStack(spacing: 20) {
-                        HStack {
-                            Text("Flash")
-                                .foregroundColor(.orange)
-                            Text("Story")
-                                .foregroundColor(.primary)
-                        }
-                        .font(.largeTitle)
-                        .fontWeight(.semibold)
-                        .padding()
-                        .frame(maxWidth: .infinity)
-                            
-                        Divider()
-                            .foregroundStyle(Color.primary)
-//                      SearchBar(text: $viewModel.searchText)
-                        HotTopicsView(collections: viewModel.collections.prefix(5), navigationPath: $navigationPath)
-                        FactOfTheDayView()
-                        FavoritesView(collections: viewModel.collections.filter { viewModel.favoriteTopics.contains($0.name) }, navigationPath: $navigationPath)
-                        
-                        ForEach(viewModel.bigTopics.keys.sorted(), id: \.self) { topic in
-                            BigTopicView(title: topic, collections: viewModel.collections.filter { viewModel.bigTopics[topic]?.contains($0.name) ?? false }, navigationPath: $navigationPath)
-                        }
-                        
-                        MoreTopicsView(collections: viewModel.collections.filter { viewModel.otherTopics.contains($0.name) }, showAllAction: { viewModel.showAllTopics = true }, navigationPath: $navigationPath)
+                VStack(spacing: 20) {
+                    HStack {
+                        Text("Flash")
+                            .foregroundColor(.orange)
+                        Text("Story")
+                            .foregroundColor(.primary)
                     }
+                    .font(.largeTitle)
+                    .fontWeight(.semibold)
                     .padding()
+                    .frame(maxWidth: .infinity)
+                        
+                    Divider()
+                        .foregroundStyle(Color.primary)
+                    
+                    HotTopicsView(collections: viewModel.collections.prefix(5), navigationPath: $navigationPath)
+                    FactOfTheDayView()
+                    FavoritesView(collections: viewModel.collections.filter { viewModel.favoriteTopics.contains($0.name) }, navigationPath: $navigationPath)
+                    
+                    ForEach(viewModel.bigTopics.keys.sorted(), id: \.self) { topic in
+                        BigTopicView(title: topic, collections: viewModel.collections.filter { viewModel.bigTopics[topic]?.contains($0.name) ?? false }, navigationPath: $navigationPath)
+                    }
+                    
+                    MoreTopicsView(collections: viewModel.collections.filter { viewModel.otherTopics.contains($0.name) }, showAllAction: { viewModel.showAllTopics = true }, navigationPath: $navigationPath)
                 }
+                .padding()
             }
         }
+        .coordinateSpace(name: "RefreshControl")
         .sheet(isPresented: $viewModel.showAllTopics) {
             AllTopicsView(collections: viewModel.collections, navigationPath: $navigationPath)
         }
@@ -91,6 +108,75 @@ struct HomeView: View {
     }
 }
 
+struct RefreshControl: View {
+    var coordinateSpace: CoordinateSpace
+    var onRefresh: () async -> Void
+    
+    @State private var refresh = false
+    @State private var offset: CGFloat = 0
+    @State private var rotationAngle: Double = 0
+    
+    var body: some View {
+        GeometryReader { geo in
+            if geo.frame(in: coordinateSpace).midY > 50 {
+                Spacer()
+                    .onAppear {
+                        if !refresh {
+                            refresh = true
+                            Task {
+                                await onRefresh()
+                                refresh = false
+                            }
+                        }
+                    }
+            } else if geo.frame(in: coordinateSpace).maxY < 1 {
+                Spacer()
+                    .onAppear {
+                        refresh = false
+                    }
+            }
+            HStack {
+                Spacer()
+                VStack(spacing: 8) {
+                    Image(systemName: "arrow.clockwise")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 20, height: 20)
+                        .rotationEffect(.degrees(refresh ? rotationAngle : (offset > 30 ? 180 : 0)))
+                        .animation(refresh ? Animation.linear(duration: 2).repeatForever(autoreverses: false) : .easeInOut(duration: 0.2), value: refresh ? rotationAngle : offset)
+                        .foregroundColor(.primary)
+                        .onAppear {
+                            if refresh {
+                                withAnimation(Animation.linear(duration: 2).repeatForever(autoreverses: false)) {
+                                    rotationAngle = 360
+                                }
+                            }
+                        }
+                    
+                    Text(refresh ? "Refreshing..." : (offset > 30 ? "Release to refresh" : "Pull to refresh"))
+                        .font(.subheadline)
+                        .foregroundColor(.primary)
+                        .opacity(refresh ? 0.7 : 1.0) // Slightly dim the text when refreshing
+                        .animation(.easeInOut(duration: 0.3), value: refresh)
+                }
+                Spacer()
+            }
+            .offset(y: -50)
+            .opacity(min(CGFloat(offset) / 50.0, 1.0))
+            .onAppear {
+                withAnimation(.easeInOut(duration: 0.3)) {
+                    offset = geo.frame(in: coordinateSpace).minY
+                }
+            }
+            .onChange(of: geo.frame(in: coordinateSpace).minY) { oldValue, newValue in
+                withAnimation(.easeInOut(duration: 0.1)) {
+                    offset = newValue
+                }
+            }
+        }
+        .frame(height: 0)
+    }
+}
 // MARK: - Subviews
 
 struct HotTopicsView: View {
