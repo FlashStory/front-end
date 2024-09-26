@@ -6,6 +6,7 @@ class HomeViewModel: ObservableObject {
     @Published var collections: [CollectionView] = []
     @Published var searchText = ""
     @Published var showAllTopics = false
+    @Published var isLoading = true
     
     let bigTopics: [String: [String]] = [
         "Nature": ["Ocean Life", "Space Exploration", "Rainforests", "Desert Ecosystems", "Mountain Ranges"],
@@ -25,12 +26,16 @@ class HomeViewModel: ObservableObject {
     func fetchCollections() {
         Task {
             do {
+                self.isLoading = true
                 let fetchedCollections = try await collectionService.getAllCollections()
                 DispatchQueue.main.async {
                     self.collections = fetchedCollections
+                    self.isLoading = false
                 }
             } catch {
-                print("Error fetching collections: \(error)")
+                DispatchQueue.main.async {
+                    self.isLoading = false
+                }
             }
         }
     }
@@ -43,42 +48,47 @@ struct HomeView: View {
     @Binding var navigationPath: NavigationPath
     
     var body: some View {
-            ScrollView(showsIndicators: false) {
-                VStack(spacing: 20) {
-                    HStack {
-                        Text("Flash")
-                            .foregroundColor(.orange)
-                        Text("Story")
-                            .foregroundColor(.primary)
-                    }
-                    .font(.largeTitle)
-                    .fontWeight(.semibold)
-                    .padding()
-                    .frame(maxWidth: .infinity)
+        Group {
+            if viewModel.isLoading {
+                SkeletonLoadingView()
+            } else {
+                ScrollView(showsIndicators: false) {
+                    VStack(spacing: 20) {
+                        HStack {
+                            Text("Flash")
+                                .foregroundColor(.orange)
+                            Text("Story")
+                                .foregroundColor(.primary)
+                        }
+                        .font(.largeTitle)
+                        .fontWeight(.semibold)
+                        .padding()
+                        .frame(maxWidth: .infinity)
+                            
+                        Divider()
+                            .foregroundStyle(Color.primary)
+//                      SearchBar(text: $viewModel.searchText)
+                        HotTopicsView(collections: viewModel.collections.prefix(5), navigationPath: $navigationPath)
+                        FactOfTheDayView()
+                        FavoritesView(collections: viewModel.collections.filter { viewModel.favoriteTopics.contains($0.name) }, navigationPath: $navigationPath)
                         
-                    Divider()
-                        .foregroundStyle(Color.primary)
-                    //                    SearchBar(text: $viewModel.searchText)
-                    HotTopicsView(collections: viewModel.collections.prefix(5), navigationPath: $navigationPath)
-                    FactOfTheDayView()
-                    FavoritesView(collections: viewModel.collections.filter { viewModel.favoriteTopics.contains($0.name) }, navigationPath: $navigationPath)
-                    
-                    ForEach(viewModel.bigTopics.keys.sorted(), id: \.self) { topic in
-                        BigTopicView(title: topic, collections: viewModel.collections.filter { viewModel.bigTopics[topic]?.contains($0.name) ?? false }, navigationPath: $navigationPath)
+                        ForEach(viewModel.bigTopics.keys.sorted(), id: \.self) { topic in
+                            BigTopicView(title: topic, collections: viewModel.collections.filter { viewModel.bigTopics[topic]?.contains($0.name) ?? false }, navigationPath: $navigationPath)
+                        }
+                        
+                        MoreTopicsView(collections: viewModel.collections.filter { viewModel.otherTopics.contains($0.name) }, showAllAction: { viewModel.showAllTopics = true }, navigationPath: $navigationPath)
                     }
-                    
-                    MoreTopicsView(collections: viewModel.collections.filter { viewModel.otherTopics.contains($0.name) }, showAllAction: { viewModel.showAllTopics = true }, navigationPath: $navigationPath)
+                    .padding()
                 }
-                .padding()
-            }
-            //            .navigationTitle("Flash Story")
-            .sheet(isPresented: $viewModel.showAllTopics) {
-                AllTopicsView(collections: viewModel.collections, navigationPath: $navigationPath)
-            }
-            .onAppear {
-                viewModel.fetchCollections()
             }
         }
+        .sheet(isPresented: $viewModel.showAllTopics) {
+            AllTopicsView(collections: viewModel.collections, navigationPath: $navigationPath)
+        }
+        .onAppear {
+            viewModel.fetchCollections()
+        }
+    }
 }
 
 // MARK: - Subviews
