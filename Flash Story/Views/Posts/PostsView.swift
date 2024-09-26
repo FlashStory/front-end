@@ -235,7 +235,10 @@ struct PostsView: View {
     @StateObject private var viewModel: PostsViewModel
     @Environment(\.presentationMode) var presentationMode
     @State private var dragOffset: CGFloat = 0
-    @GestureState private var isDragging: Bool = false
+    @State private var isDraggingFromEdge: Bool = false
+
+    // Define a threshold for the drag gesture to be considered as coming from the edge
+    private let edgeThreshold: CGFloat = 20
 
     init(collectionId: String) {
         _viewModel = StateObject(wrappedValue: PostsViewModel(collectionId: collectionId))
@@ -275,29 +278,36 @@ struct PostsView: View {
                     Spacer()
                 }
             }
-            // Back Button Gesture
-            .offset(x: max(0, dragOffset))
-                .animation(.interactiveSpring(), value: isDragging)
-                .simultaneousGesture(
-                    DragGesture()
-                        .updating($isDragging) { _, state, _ in
-                            state = true
+            .offset(x: dragOffset)
+            .gesture(
+                DragGesture()
+                    .onChanged { value in
+                        if !isDraggingFromEdge {
+                            isDraggingFromEdge = value.startLocation.x <= edgeThreshold
                         }
-                        .onChanged { value in
-                            if value.translation.width > 0 {
-                                dragOffset = value.translation.width
-                            }
+                        
+                        if isDraggingFromEdge {
+                            dragOffset = max(0, value.translation.width)
                         }
-                        .onEnded { value in
+                    }
+                    .onEnded { value in
+                        if isDraggingFromEdge {
                             if value.translation.width > geometry.size.width / 3 {
-                                self.presentationMode.wrappedValue.dismiss()
+                                withAnimation(.easeOut(duration: 0.2)) {
+                                    dragOffset = geometry.size.width
+                                }
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                                    self.presentationMode.wrappedValue.dismiss()
+                                }
                             } else {
-                                withAnimation(.spring()) {
+                                withAnimation(.easeOut(duration: 0.2)) {
                                     dragOffset = 0
                                 }
                             }
                         }
-                )
+                        isDraggingFromEdge = false
+                    }
+            )
         }
         .onAppear {
             viewModel.fetchPosts()
@@ -307,7 +317,12 @@ struct PostsView: View {
     
     private var backButton: some View {
         Button(action: {
-            presentationMode.wrappedValue.dismiss()
+            withAnimation(.easeOut(duration: 0.2)) {
+                dragOffset = UIScreen.main.bounds.width
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                self.presentationMode.wrappedValue.dismiss()
+            }
         }) {
             Image(systemName: "chevron.left")
                 .foregroundColor(.primary)
