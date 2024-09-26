@@ -259,7 +259,7 @@ struct PostsView: View {
                                 .frame(width: geometry.size.width, height: geometry.size.height)
                         }
                     )
-                    .onChange(of: viewModel.currentIndex) { newValue in
+                    .onChange(of: viewModel.currentIndex) { oldValue, newValue in
                         viewModel.updateLastViewedPosition(newValue)
                     }
                 }
@@ -353,25 +353,48 @@ struct VerticalPagingView<Item: Identifiable, Content: View>: View {
     @Binding var currentIndex: Int
     let items: [Item]
     let itemContent: (Item) -> Content
-
+    
+    @State private var hasScrolled = false
+    @State private var scrollProxy: ScrollViewProxy?
+    
     var body: some View {
-        ScrollView(.vertical, showsIndicators: false) {
-            LazyVStack(spacing: 0) {
-                ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
-                    itemContent(item)
-                        .containerRelativeFrame(.vertical)
-                        .id(index)
+        ScrollViewReader { proxy in
+            ScrollView(.vertical, showsIndicators: false) {
+                LazyVStack(spacing: 0) {
+                    ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
+                        itemContent(item)
+                            .containerRelativeFrame(.vertical)
+                            .id(index)
+                    }
                 }
             }
+            .scrollBounceBehavior(.automatic)
+            .scrollTargetLayout()
+            .scrollTargetBehavior(.paging)
+            .scrollPosition(id: Binding(
+                get: { currentIndex as Int? },
+                set: { if let newValue = $0 { currentIndex = newValue } }
+            ))
+            .ignoresSafeArea()
+            .onAppear {
+                scrollProxy = proxy
+            }
         }
-        .scrollBounceBehavior(.automatic)
-        .scrollTargetLayout()
-        .scrollTargetBehavior(.paging)
-        .scrollPosition(id: Binding(
-            get: { currentIndex as Int? },
-            set: { if let newValue = $0 { currentIndex = newValue } }
-        ))
-        .ignoresSafeArea()
+        .task {
+            // Wait a short moment to ensure the view is fully loaded
+            try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
+            scrollToInitialPosition()
+        }
+    }
+    
+    private func scrollToInitialPosition() {
+        guard !hasScrolled, let proxy = scrollProxy else { return }
+        
+        withAnimation {
+            proxy.scrollTo(currentIndex, anchor: .top)
+        }
+        
+        hasScrolled = true
     }
 }
 

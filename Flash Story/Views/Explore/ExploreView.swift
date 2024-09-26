@@ -109,16 +109,16 @@ struct ExploreView: View {
                         }
                     )
 //                    iOS 17 +
-//                    .onChange(of: viewModel.currentIndex) { oldValue, newValue in
-//                        if newValue >= Int(Double(viewModel.posts.count) * 0.7) {
-//                            viewModel.fetchRandomPosts()
-//                        }
-//                    }
-                    .onChange(of: viewModel.currentIndex) { newValue in
+                    .onChange(of: viewModel.currentIndex) { oldValue, newValue in
                         if newValue >= Int(Double(viewModel.posts.count) * 0.7) {
                             viewModel.fetchRandomPosts()
                         }
                     }
+//                    .onChange(of: viewModel.currentIndex) { newValue in
+//                        if newValue >= Int(Double(viewModel.posts.count) * 0.7) {
+//                            viewModel.fetchRandomPosts()
+//                        }
+//                    }
                 }
                 
                 VStack {
