@@ -340,36 +340,23 @@ struct VerticalPagingView<Item: Identifiable, Content: View>: View {
     let itemContent: (Item) -> Content
 
     var body: some View {
-        GeometryReader { geometry in
-            ScrollViewReader { scrollProxy in
-                ScrollView(.vertical, showsIndicators: false) {
-                    VStack(spacing: 0) {
-                        ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
-                            itemContent(item)
-                                .frame(width: geometry.size.width, height: geometry.size.height)
-                                .id(index)
-                        }
-                    }
+        ScrollView(.vertical, showsIndicators: false) {
+            LazyVStack(spacing: 0) {
+                ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
+                    itemContent(item)
+                        .containerRelativeFrame(.vertical)
+                        .id(index)
                 }
-                .content.offset(y: CGFloat(currentIndex) * -geometry.size.height)
-                .frame(width: geometry.size.width, height: geometry.size.height, alignment: .top)
-                .gesture(
-                    DragGesture()
-                        .onEnded({ value in
-                            if value.translation.height < 0 && currentIndex < items.count - 1 {
-                                withAnimation {
-                                    currentIndex += 1
-                                }
-                            } else if value.translation.height > 0 && currentIndex > 0 {
-                                withAnimation {
-                                    currentIndex -= 1
-                                }
-                            }
-                            scrollProxy.scrollTo(currentIndex, anchor: .top)
-                        })
-                )
             }
         }
+        .scrollBounceBehavior(.automatic)
+        .scrollTargetLayout()
+        .scrollTargetBehavior(.paging)
+        .scrollPosition(id: Binding(
+            get: { currentIndex as Int? },
+            set: { if let newValue = $0 { currentIndex = newValue } }
+        ))
+        .ignoresSafeArea()
     }
 }
 
