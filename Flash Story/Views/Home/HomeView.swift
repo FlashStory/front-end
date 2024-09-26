@@ -17,14 +17,22 @@ class HomeViewModel: ObservableObject {
         "Historical Events": ["Ancient Civilizations", "World Wars", "Industrial Revolution", "Space Race", "Civil Rights Movements"]
     ]
     
-    let otherTopics = [
-        "Sci-Fi Stories", "Mystery Stories", "Motivational Quotes", "Fun Facts", "Technology Breakthroughs",
-        "Art History", "Scientific Discoveries", "Culinary Wonders", "Ancient Myths", "Bizarre Animals"
-    ]
+    var randomTopics: [CollectionView] {
+        Array(collections.shuffled().prefix(4))
+    }
     
-    let favoriteTopics = ["Ocean Life", "Sci-Fi Stories", "Ancient Civilizations", "Technology Breakthroughs"]
-    
+    @Published var favoriteCollections: [CollectionView] = []
+    private let favoriteCollectionsManager = FavoriteCollectionsManager.shared
     private let collectionService = CollectionService()
+    
+    init() {
+        updateFavoriteCollections()
+    }
+    
+    func updateFavoriteCollections() {
+        let favoriteIds = Set(favoriteCollectionsManager.getFavoriteCollections().keys)
+        favoriteCollections = collections.filter { favoriteIds.contains($0.id) }
+    }
     
     func fetchCollections(forceRefresh: Bool = false) {
         guard forceRefresh || !hasLoadedInitialData else { return }
@@ -40,6 +48,7 @@ class HomeViewModel: ObservableObject {
                 let fetchedCollections = try await collectionService.getAllCollections()
                 DispatchQueue.main.async {
                     self.collections = fetchedCollections
+                    self.updateFavoriteCollections()
                     self.isLoading = false
                     self.isRefreshing = false
                     self.hasLoadedInitialData = true
@@ -60,6 +69,7 @@ class HomeViewModel: ObservableObject {
 struct HomeView: View {
     @StateObject private var viewModel = HomeViewModel()
     @Binding var navigationPath: NavigationPath
+    @State private var viewAppeared = false
     
     var body: some View {
         ScrollView(showsIndicators: false) {
@@ -87,13 +97,16 @@ struct HomeView: View {
                     
                     HotTopicsView(collections: viewModel.collections.prefix(5), navigationPath: $navigationPath)
                     FactOfTheDayView()
-                    FavoritesView(collections: viewModel.collections.filter { viewModel.favoriteTopics.contains($0.name) }, navigationPath: $navigationPath)
+                    
+                    if !viewModel.favoriteCollections.isEmpty {
+                        FavoritesView(collections: viewModel.favoriteCollections, navigationPath: $navigationPath)
+                    }
                     
                     ForEach(viewModel.bigTopics.keys.sorted(), id: \.self) { topic in
                         BigTopicView(title: topic, collections: viewModel.collections.filter { viewModel.bigTopics[topic]?.contains($0.name) ?? false }, navigationPath: $navigationPath)
                     }
                     
-                    MoreTopicsView(collections: viewModel.collections.filter { viewModel.otherTopics.contains($0.name) }, showAllAction: { viewModel.showAllTopics = true }, navigationPath: $navigationPath)
+                    MoreTopicsView(collections: viewModel.randomTopics, showAllAction: { viewModel.showAllTopics = true }, navigationPath: $navigationPath)
                 }
                 .padding()
             }
@@ -103,7 +116,12 @@ struct HomeView: View {
             AllTopicsView(collections: viewModel.collections, navigationPath: $navigationPath)
         }
         .onAppear {
-            viewModel.fetchCollections()
+            if !viewAppeared {
+                viewModel.fetchCollections()
+                viewAppeared = true
+            } else {
+                viewModel.updateFavoriteCollections()
+            }
         }
     }
 }
