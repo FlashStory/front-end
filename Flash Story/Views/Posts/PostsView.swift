@@ -558,5 +558,5 @@ struct SaveButton: View {
 }
 
 #Preview {
-    PostsView(collectionId: "66ef2bc3a375cf13126ffa57")
+    PostsView(collectionId: "66f5f2bc2b6c58159da4f424")
 }
