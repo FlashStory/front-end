@@ -4,18 +4,13 @@ import SwiftUI
 
 class HomeViewModel: ObservableObject {
     @Published var collections: [CollectionView] = []
+    @Published var topics: [TopicView] = []
     @Published var searchText = ""
     @Published var showAllTopics = false
     @Published var isLoading = true
     @Published var isRefreshing = false
     
     private var hasLoadedInitialData = false
-    
-    let bigTopics: [String: [String]] = [
-        "Nature": ["Ocean Life", "Space Exploration", "Rainforests", "Desert Ecosystems", "Mountain Ranges"],
-        "Country Facts": ["United States", "Japan", "Brazil", "Egypt", "Australia", "India", "France"],
-        "Historical Events": ["Ancient Civilizations", "World Wars", "Industrial Revolution", "Space Race", "Civil Rights Movements"]
-    ]
     
     var randomTopics: [CollectionView] {
         Array(collections.shuffled().prefix(4))
@@ -45,9 +40,14 @@ class HomeViewModel: ObservableObject {
                     self.isLoading = true
                 }
                 
-                let fetchedCollections = try await collectionService.getAllCollections()
+                async let fetchedCollections = collectionService.getAllCollections()
+                async let fetchedTopics = collectionService.getAllTopics()
+
+                let (collections, topics) = try await (fetchedCollections, fetchedTopics)
+            
                 DispatchQueue.main.async {
-                    self.collections = fetchedCollections
+                    self.collections = collections
+                    self.topics = topics
                     self.updateFavoriteCollections()
                     self.isLoading = false
                     self.isRefreshing = false
@@ -61,6 +61,23 @@ class HomeViewModel: ObservableObject {
                 }
             }
         }
+    }
+    
+    func getCollectionsForTopic(_ topic: TopicView) -> [CollectionView] {
+        let collectionIds = Set(topic.collections)
+        return collections.filter { collectionIds.contains($0.id) }
+    }
+    
+    func getCollectionNamesForTopic(_ topic: TopicView) -> [String] {
+        getCollectionsForTopic(topic).map { $0.name }
+    }
+    
+    var topicsWithCollectionNames: [String: [String]] {
+        var result: [String: [String]] = [:]
+        for topic in topics {
+            result[topic.name] = getCollectionNamesForTopic(topic)
+        }
+        return result
     }
 }
 
@@ -95,15 +112,19 @@ struct HomeView: View {
                     Divider()
                         .foregroundStyle(Color.primary)
                     
-                    HotTopicsView(collections: viewModel.collections.prefix(5), navigationPath: $navigationPath)
+                    HotTopicsView(collections: viewModel.randomTopics, navigationPath: $navigationPath)
                     FactOfTheDayView()
                     
                     if !viewModel.favoriteCollections.isEmpty {
                         FavoritesView(collections: viewModel.favoriteCollections, navigationPath: $navigationPath)
                     }
                     
-                    ForEach(viewModel.bigTopics.keys.sorted(), id: \.self) { topic in
-                        BigTopicView(title: topic, collections: viewModel.collections.filter { viewModel.bigTopics[topic]?.contains($0.name) ?? false }, navigationPath: $navigationPath)
+                    ForEach(viewModel.topics.sorted(by: { $0.name < $1.name }), id: \.id) { topic in
+                        BigTopicView(
+                            title: topic.name,
+                            collections: viewModel.getCollectionsForTopic(topic),
+                            navigationPath: $navigationPath
+                        )
                     }
                     
                     MoreTopicsView(collections: viewModel.randomTopics, showAllAction: { viewModel.showAllTopics = true }, navigationPath: $navigationPath)
@@ -198,7 +219,7 @@ struct RefreshControl: View {
 // MARK: - Subviews
 
 struct HotTopicsView: View {
-    let collections: ArraySlice<CollectionView>
+    let collections: [CollectionView]
     @Binding var navigationPath: NavigationPath
     
     var body: some View {

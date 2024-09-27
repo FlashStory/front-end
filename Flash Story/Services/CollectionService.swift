@@ -20,4 +20,14 @@ class CollectionService {
         
         return try decoder.decode([CollectionView].self, from: data)
     }
+    
+    func getAllTopics() async throws -> [TopicView] {
+        let url = URL(string: "\(baseURL)/collections/topics")!
+        let (data, _) = try await URLSession.shared.data(from: url)
+
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+
+        return try decoder.decode([TopicView].self, from: data)
+    }
 }
